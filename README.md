@@ -155,9 +155,17 @@ Project screenshots and dashboard previews will be added after completing the in
 
 ---
 
-## Author
+## Project Team
 
-**Ahmed Saeed Shalaby**
+This project is being developed by a team of six Full-Stack Developers:
+
+- **Ahmed Saeed Shalaby** — Full-Stack Developer
+- **Eslam Mohamed Kamel** — Full-Stack Developer
+- **Osama Ayman** — Full-Stack Developer
+- **Saleh Nagiub** — Full-Stack Developer
+- **Abdelfattah Ahmed** — Full-Stack Developer
+- **Marwa Gamal Elzanaty** — Full-Stack Developer
+
 
 [![GitHub](https://img.shields.io/badge/GitHub-ahmedshalaby03-181717?style=for-the-badge&logo=github)](https://github.com/ahmedshalaby03)
 
