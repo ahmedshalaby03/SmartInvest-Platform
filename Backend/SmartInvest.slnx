@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SmartInvest.API/SmartInvest.API.csproj" />
+    <Project Path="src/SmartInvest.Application/SmartInvest.Application.csproj" />
+    <Project Path="src/SmartInvest.Domain/SmartInvest.Domain.csproj" />
+    <Project Path="src/SmartInvest.Infrastructure/SmartInvest.Infrastructure.csproj" />
+  </Folder>
+</Solution>
