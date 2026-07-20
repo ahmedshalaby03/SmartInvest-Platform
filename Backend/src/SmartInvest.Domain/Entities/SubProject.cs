@@ -1,0 +1,43 @@
+﻿namespace SmartInvest.Domain.Entities
+{
+    public class SubProject
+    {
+        [Key]
+        public int SubProjectId { get; set; }
+
+        public int MainProjectId { get; set; }
+        public virtual MainProject MainProject { get; set; }
+        public string SubProjectName { get; set; } = string.Empty;
+        public string ProjectLevel { get; set; } = string.Empty;
+        public string ComponentType { get; set; } = string.Empty;
+        public string AccountingUnit { get; set; } = string.Empty;
+        public decimal TotalCost { get; set; }
+        public string ProjectNature { get; set; } = string.Empty;
+
+        // Nullables based on ERD
+        public string? GreenInvestmentLink { get; set; } 
+        public string? ProjectDescription { get; set; }
+        public string? ProjectGoal { get; set; }
+        public string? SocialImpact { get; set; }
+        public string? EconomicImpact { get; set; }
+        public string? EnvironmentalImpact { get; set; }
+
+        [ForeignKey("Village")]
+        public int VillageId { get; set; }
+        public virtual Village Village { get; set; }
+
+        [ForeignKey("Priority")]
+        public int PriorityId { get; set; }
+        public virtual ProjectPriority Priority { get; set; }
+
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        [ForeignKey("Status")]
+        public int StatusId { get; set; }
+        public virtual ProjectStatus Status { get; set; }
+
+        public virtual ICollection<PlanProject> PlanProjects { get; set; }
+        public virtual ICollection<ProjectAssignment>? ProjectAssignments { get; set; }
+        public virtual ICollection<ProjectSpecification>? ProjectSpecifications { get; set; }
+    }
+}
