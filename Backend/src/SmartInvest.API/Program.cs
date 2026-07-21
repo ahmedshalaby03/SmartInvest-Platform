@@ -1,10 +1,13 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SmartInvest.Application;
 using SmartInvest.Application.Common;
+using SmartInvest.Domain.Common;
 using SmartInvest.Infrastructure;
+using SmartInvest.Infrastructure.Identity;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +83,47 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+
+app.UseMiddleware<SmartInvest.API.Middleware.ExceptionHandlingMiddleware>();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager };
+
+    foreach (var role in roles)
+    {
+        var exists = await roleManager.RoleExistsAsync(role);
+        if (!exists)
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    const string adminEmail = "admin@gmail.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = "admin",
+            Email = adminEmail,
+            FullName = "مدير النظام",
+            EmailConfirmed = true,
+            IsActive = true
+        };
+
+        var createResult = await userManager.CreateAsync(adminUser, "Admin@123");
+        if (createResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, Roles.PlanningManager);
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // HTTP pipeline

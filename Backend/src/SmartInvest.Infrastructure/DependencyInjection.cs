@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SmartInvest.Application.Interfaces;
+using SmartInvest.Application.Services;
 using SmartInvest.Domain.Interfaces;
 using SmartInvest.Infrastructure.Data;
 using SmartInvest.Infrastructure.Identity;
@@ -35,6 +37,13 @@ public static class DependencyInjection
 
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IMainProjectRepository, MainProjectRepository>();
+        services.AddScoped<ISubProjectRepository, SubProjectRepository>();
+        services.AddScoped<IMainProjectService, MainProjectService>();
+        services.AddScoped<ISubProjectService, SubProjectService>();
+        services.AddScoped<IProjectSpecificationService, ProjectSpecificationService>();
+        services.AddScoped<ILookupService, LookupService>();
+        services.AddScoped<IIdentityService, IdentityService>();
 
         return services;
     }
