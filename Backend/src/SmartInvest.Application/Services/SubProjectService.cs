@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using SmartInvest.Application.Common.Exceptions;
 using SmartInvest.Application.DTOs;
 using SmartInvest.Application.DTOs.Common;
@@ -12,7 +12,7 @@ public class SubProjectService : ISubProjectService
 {
     private readonly ISubProjectRepository _subProjectRepository;
     private readonly IMainProjectRepository _mainProjectRepository;
-    private readonly IGenericRepository<Village> _villageRepository;
+    private readonly IGenericRepository<Markaz> _markazRepository;
     private readonly IGenericRepository<ProjectPriority> _priorityRepository;
     private readonly IGenericRepository<ProjectStatus> _statusRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -21,7 +21,7 @@ public class SubProjectService : ISubProjectService
     public SubProjectService(
         ISubProjectRepository subProjectRepository,
         IMainProjectRepository mainProjectRepository,
-        IGenericRepository<Village> villageRepository,
+        IGenericRepository<Markaz> markazRepository,
         IGenericRepository<ProjectPriority> priorityRepository,
         IGenericRepository<ProjectStatus> statusRepository,
         IUnitOfWork unitOfWork,
@@ -29,16 +29,16 @@ public class SubProjectService : ISubProjectService
     {
         _subProjectRepository = subProjectRepository;
         _mainProjectRepository = mainProjectRepository;
-        _villageRepository = villageRepository;
+        _markazRepository = markazRepository;
         _priorityRepository = priorityRepository;
         _statusRepository = statusRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
-    public async Task<PagedResultDto<SubProjectListItemDto>> SearchAsync(int? mainProjectId, int? mainProgramId, int? subProgramId, int? markazId, int? villageId, int? priorityId, int? statusId, string? searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResultDto<SubProjectListItemDto>> SearchAsync(int? mainProjectId, int? mainProgramId, int? subProgramId, int? markazId, int? priorityId, int? statusId, string? searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var result = await _subProjectRepository.SearchAsync(mainProjectId, mainProgramId, subProgramId, markazId, villageId,
+        var result = await _subProjectRepository.SearchAsync(mainProjectId, mainProgramId, subProgramId, markazId,
             priorityId, statusId, searchTerm, page, pageSize, cancellationToken);
 
         var pagedResult = new PagedResultDto<SubProjectListItemDto>
@@ -65,7 +65,7 @@ public class SubProjectService : ISubProjectService
 
     public async Task<SubProjectDetailDto> CreateAsync(CreateSubProjectDto dto, CancellationToken cancellationToken = default)
     {
-        await ValidateReferencesAsync(dto.MainProjectId, dto.VillageId, dto.PriorityId, dto.StatusId, cancellationToken);
+        await ValidateReferencesAsync(dto.MainProjectId, dto.MarkazId, dto.PriorityId, dto.StatusId, cancellationToken);
 
         var subProject = _mapper.Map<SubProject>(dto);
 
@@ -84,14 +84,14 @@ public class SubProjectService : ISubProjectService
             throw new NotFoundException($"المشروع الفرعي رقم {id} غير موجود");
         }
 
-        await ValidateReferencesAsync(subProject.MainProjectId, dto.VillageId, dto.PriorityId, dto.StatusId, cancellationToken);
+        await ValidateReferencesAsync(subProject.MainProjectId, dto.MarkazId, dto.PriorityId, dto.StatusId, cancellationToken);
 
         subProject.SubProjectName = dto.Name;
         subProject.ProjectLevel = dto.ProjectLevel;
         subProject.ComponentType = dto.ComponentType;
         subProject.AccountingUnit = dto.AccountingUnit;
         subProject.ProjectNature = dto.ProjectNature;
-        subProject.VillageId = dto.VillageId;
+        subProject.MarkazId = dto.MarkazId;
         subProject.PriorityId = dto.PriorityId;
         subProject.StatusId = dto.StatusId;
         subProject.BankFunding = dto.BankFunding;
@@ -124,7 +124,7 @@ public class SubProjectService : ISubProjectService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task ValidateReferencesAsync(int mainProjectId, int villageId, int priorityId, int statusId, CancellationToken cancellationToken)
+    private async Task ValidateReferencesAsync(int mainProjectId, int markazId, int priorityId, int statusId, CancellationToken cancellationToken)
     {
         var mainProject = await _mainProjectRepository.GetByIdAsync(mainProjectId, cancellationToken);
         if (mainProject == null)
@@ -132,10 +132,10 @@ public class SubProjectService : ISubProjectService
             throw new NotFoundException("المشروع الرئيسي المحدد غير موجود");
         }
 
-        var village = await _villageRepository.GetByIdAsync(villageId, cancellationToken);
-        if (village == null)
+        var markaz = await _markazRepository.GetByIdAsync(markazId, cancellationToken);
+        if (markaz == null)
         {
-            throw new NotFoundException("القرية المحددة غير موجودة");
+            throw new NotFoundException("المركز المحدد غير موجود");
         }
 
         var priority = await _priorityRepository.GetByIdAsync(priorityId, cancellationToken);

@@ -1,4 +1,4 @@
-﻿namespace SmartInvest.Application.DTOs;
+namespace SmartInvest.Application.DTOs;
 
 public class SubProjectListItemDto
 {
@@ -10,8 +10,8 @@ public class SubProjectListItemDto
     public string MainProjectName { get; set; } = string.Empty;
     public string ProjectLevel { get; set; } = string.Empty;
     public string ComponentType { get; set; } = string.Empty;
-    public int VillageId { get; set; }
-    public string VillageName { get; set; } = string.Empty;
+    public int MarkazId { get; set; }
+    public string MarkazName { get; set; } = string.Empty;
     public int PriorityId { get; set; }
     public string PriorityName { get; set; } = string.Empty;
     public int StatusId { get; set; }
@@ -38,8 +38,6 @@ public class SubProjectDetailDto
     public string? EconomicImpact { get; set; }
     public string? EnvironmentalImpact { get; set; }
     public string? GreenInvestmentLink { get; set; }
-    public int VillageId { get; set; }
-    public string VillageName { get; set; } = string.Empty;
     public int MarkazId { get; set; }
     public string MarkazName { get; set; } = string.Empty;
     public int GovernorateId { get; set; }
@@ -64,7 +62,7 @@ public class CreateSubProjectDto
     public string ComponentType { get; set; } = string.Empty;
     public string AccountingUnit { get; set; } = string.Empty;
     public string ProjectNature { get; set; } = string.Empty;
-    public int VillageId { get; set; }
+    public int MarkazId { get; set; }
     public int PriorityId { get; set; }
     public int StatusId { get; set; }
     public decimal BankFunding { get; set; }
@@ -86,7 +84,7 @@ public class UpdateSubProjectDto
     public string ComponentType { get; set; } = string.Empty;
     public string AccountingUnit { get; set; } = string.Empty;
     public string ProjectNature { get; set; } = string.Empty;
-    public int VillageId { get; set; }
+    public int MarkazId { get; set; }
     public int PriorityId { get; set; }
     public int StatusId { get; set; }
     public decimal BankFunding { get; set; }

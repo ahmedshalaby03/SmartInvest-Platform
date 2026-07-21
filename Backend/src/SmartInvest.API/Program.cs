@@ -6,6 +6,7 @@ using SmartInvest.Application;
 using SmartInvest.Application.Common;
 using SmartInvest.Domain.Common;
 using SmartInvest.Infrastructure;
+using SmartInvest.Infrastructure.Data;
 using SmartInvest.Infrastructure.Identity;
 using System.Text;
 
@@ -123,7 +124,11 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(adminUser, Roles.PlanningManager);
         }
     }
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await LookupSeeder.SeedAsync(dbContext);
 }
+
 
 // ---------------------------------------------------------------------------
 // HTTP pipeline

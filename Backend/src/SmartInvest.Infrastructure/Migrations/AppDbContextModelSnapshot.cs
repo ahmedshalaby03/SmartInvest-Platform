@@ -374,6 +374,10 @@ namespace SmartInvest.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MainProjectId"));
 
+                    b.Property<string>("ExecutingAgency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("MainProjectCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -716,6 +720,9 @@ namespace SmartInvest.Infrastructure.Migrations
                     b.Property<int>("MainProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int>("MarkazId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PriorityId")
                         .HasColumnType("int");
 
@@ -750,12 +757,11 @@ namespace SmartInvest.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VillageId")
-                        .HasColumnType("int");
-
                     b.HasKey("SubProjectId");
 
                     b.HasIndex("MainProjectId");
+
+                    b.HasIndex("MarkazId");
 
                     b.HasIndex("PriorityId");
 
@@ -764,8 +770,6 @@ namespace SmartInvest.Infrastructure.Migrations
                     b.HasIndex("SubProjectCode")
                         .IsUnique()
                         .HasFilter("[SubProjectCode] IS NOT NULL");
-
-                    b.HasIndex("VillageId");
 
                     b.ToTable("SubProjects");
                 });
@@ -1069,6 +1073,12 @@ namespace SmartInvest.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SmartInvest.Domain.Entities.Markaz", "Markaz")
+                        .WithMany("SubProjects")
+                        .HasForeignKey("MarkazId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("SmartInvest.Domain.Entities.ProjectPriority", "Priority")
                         .WithMany("SubProjects")
                         .HasForeignKey("PriorityId")
@@ -1081,19 +1091,13 @@ namespace SmartInvest.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SmartInvest.Domain.Entities.Village", "Village")
-                        .WithMany("SubProjects")
-                        .HasForeignKey("VillageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("MainProject");
+
+                    b.Navigation("Markaz");
 
                     b.Navigation("Priority");
 
                     b.Navigation("Status");
-
-                    b.Navigation("Village");
                 });
 
             modelBuilder.Entity("SmartInvest.Domain.Entities.Village", b =>
@@ -1149,6 +1153,8 @@ namespace SmartInvest.Infrastructure.Migrations
 
             modelBuilder.Entity("SmartInvest.Domain.Entities.Markaz", b =>
                 {
+                    b.Navigation("SubProjects");
+
                     b.Navigation("Villages");
                 });
 
@@ -1191,11 +1197,6 @@ namespace SmartInvest.Infrastructure.Migrations
                     b.Navigation("ProjectAssignments");
 
                     b.Navigation("ProjectSpecifications");
-                });
-
-            modelBuilder.Entity("SmartInvest.Domain.Entities.Village", b =>
-                {
-                    b.Navigation("SubProjects");
                 });
 #pragma warning restore 612, 618
         }

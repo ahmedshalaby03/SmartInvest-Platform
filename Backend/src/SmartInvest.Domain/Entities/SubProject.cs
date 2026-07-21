@@ -23,9 +23,9 @@
         public string? EconomicImpact { get; set; }
         public string? EnvironmentalImpact { get; set; }
 
-        [ForeignKey("Village")]
-        public int VillageId { get; set; }
-        public virtual Village Village { get; set; }
+        [ForeignKey("Markaz")]
+        public int MarkazId { get; set; }
+        public virtual Markaz Markaz { get; set; }
 
         [ForeignKey("Priority")]
         public int PriorityId { get; set; }

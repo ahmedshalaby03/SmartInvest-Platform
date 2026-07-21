@@ -1,1 +1,157 @@
-/* You can add global styles to this file, and also import other style files */
+/* ===== SmartInvest — global styles & design tokens ===== */
+:root {
+  --green-950: #072A1E;
+  --green-900: #0C3B2A;
+  --green-800: #0F4A34;
+  --green-700: #15603F;
+  --green-600: #1C7049;
+  --gold: #C79A3A;
+  --gold-soft: #E7CE8C;
+  --bg: #EDF1ED;
+  --surface: #FFFFFF;
+  --surface-2: #F6F9F6;
+  --ink: #15231B;
+  --muted: #657A6E;
+  --line: #E1E8E1;
+  --line-strong: #CBD6CC;
+  --ok: #1B9E5A;
+  --ok-bg: #E6F5EC;
+  --warn: #C98A12;
+  --warn-bg: #FBF1DC;
+  --bad: #DB4657;
+  --bad-bg: #FCEBED;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(12, 59, 42, .06), 0 8px 24px rgba(12, 59, 42, .06);
+  --font: "Segoe UI", "Tajawal", "Cairo", "Tahoma", "Geeza Pro", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 800; }
+a { color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+
+:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 2px; }
+
+/* ===== scrollbar متناسق مع الثيم ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--green-600) transparent;
+}
+*::-webkit-scrollbar { width: 11px; height: 11px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--green-600), var(--green-800));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--gold), var(--green-700));
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner { background: transparent; }
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* shared button */
+.si-btn {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 11px 18px;
+  border-radius: 11px;
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.si-btn:hover { transform: translateY(-1px); }
+.si-btn.primary { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+.si-btn.gold { background: var(--gold); border-color: var(--gold); color: #2A2107; }
+
+/* ===== modal مشترك ===== */
+.si-overlay {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(9, 30, 21, .5);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 32px 16px; overflow: auto;
+}
+.si-modal {
+  width: min(760px, 100%);
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+  overflow: hidden;
+  animation: si-pop .18s ease;
+}
+@keyframes si-pop { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.si-modal-head { display: flex; align-items: flex-start; gap: 12px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+.si-modal-head .grow { flex: 1; }
+.si-modal-head h3 { font-size: 18px; }
+.si-modal-head p { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+.si-x { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); font-size: 18px; color: var(--muted); line-height: 1; }
+.si-modal-body { padding: 20px 22px; max-height: 64vh; overflow: auto; }
+.si-modal-foot { display: flex; gap: 10px; align-items: center; padding: 16px 22px; border-top: 1px solid var(--line); background: var(--surface-2); }
+.si-modal-foot .grow { flex: 1; }
+
+.si-step { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+.si-step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--gold); color: #2A2107; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.si-step h4 { font-size: 14px; }
+
+.si-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+@media (max-width: 620px) { .si-grid { grid-template-columns: 1fr; } }
+.si-grid .full { grid-column: 1 / -1; }
+.si-fld label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+.si-fld label .req { color: var(--bad); }
+.si-fld input, .si-fld select, .si-fld textarea {
+  width: 100%; border: 1px solid var(--line-strong); border-radius: 9px;
+  padding: 10px 11px; font-family: inherit; font-size: 13px;
+  background: var(--surface); color: var(--ink);
+}
+.si-fld input:disabled, .si-fld select:disabled { background: var(--surface-2); color: var(--muted); }
+.si-fld textarea { min-height: 66px; resize: vertical; }
+.si-fld .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+.si-note {
+  display: flex; gap: 9px; align-items: flex-start;
+  border-radius: 10px; padding: 11px 13px; font-size: 12px; margin-bottom: 16px;
+  border: 1px solid #ECD9A6; background: var(--warn-bg); color: #8a6206;
+}
+.si-locked {
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+}
+.si-locked .lh { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--green-900); color: #EAF3EC; }
+.si-locked .lh b { color: #fff; font-size: 14px; }
+.si-locked .lh .lc { color: #E7CE8C; font-size: 12px; font-weight: 700; }
+.si-locked .lh .lb { margin-inline-start: auto; background: rgba(255,255,255,.14); color: #EAF3EC; padding: 5px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.si-err { background: var(--bad-bg); border: 1px solid #F3C6CC; color: #b32a39; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}

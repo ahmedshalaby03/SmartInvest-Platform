@@ -28,5 +28,10 @@ public class SubProjectConfiguration : IEntityTypeConfiguration<SubProject>
                .WithMany(p => p.SubProjects)
                .HasForeignKey(x => x.PriorityId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Markaz)
+               .WithMany(m => m.SubProjects)
+               .HasForeignKey(x => x.MarkazId)
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }

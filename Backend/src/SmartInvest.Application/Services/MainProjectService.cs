@@ -84,6 +84,7 @@ public class MainProjectService : IMainProjectService
 
         mainProject.MainProjectCode = dto.Code;
         mainProject.MainProjectName = dto.Name;
+        mainProject.ExecutingAgency = dto.ExecutingAgency;
         mainProject.SubProgramId = dto.SubProgramId;
 
         _mainProjectRepository.Update(mainProject);

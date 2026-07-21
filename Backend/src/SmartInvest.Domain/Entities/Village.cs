@@ -8,7 +8,5 @@
         [ForeignKey("Markaz")]
         public int MarkazId { get; set; }
         public virtual Markaz Markaz { get; set; }
-
-        public virtual ICollection<SubProject> SubProjects { get; set; }
     }
 }

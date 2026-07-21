@@ -1,0 +1,95 @@
+<div class="home">
+  <!-- خلفية متحركة -->
+  <div class="bg-glow"></div>
+  <div class="bg-rings"></div>
+  <div class="particles" aria-hidden="true">
+    @for (p of particles; track p) {
+      <i class="pt"></i>
+    }
+  </div>
+
+  <!-- الشريط العلوي -->
+  <header class="topbar reveal">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <div class="brand-txt">
+        <b><span>Smart</span>Invest</b>
+        <small>محافظة المنوفية</small>
+      </div>
+    </div>
+    <a class="login-btn" routerLink="/login">
+      <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.9">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+      </svg>
+      تسجيل الدخول
+    </a>
+  </header>
+
+  <!-- المحتوى المركزي -->
+  <main class="hero">
+    <div class="stage-wrap">
+      <div class="stage">
+        <!-- الحلقة المتوهجة خلف الشعار -->
+        <div class="emblem-ring"></div>
+        <div class="emblem-halo"></div>
+
+        <!-- شعار المحافظة -->
+        <div class="emblem">
+          @if (!imgFailed()) {
+            <img
+              src="menoufia-emblem.png"
+              alt="شعار محافظة المنوفية"
+              (error)="imgFailed.set(true)"
+            />
+          } @else {
+            <!-- بديل مرسوم لو الصورة مش موجودة -->
+            <svg viewBox="0 0 200 200" class="emblem-fallback" aria-label="شعار محافظة المنوفية">
+              <circle cx="100" cy="100" r="96" fill="#2f7d46" stroke="#0C3B2A" stroke-width="4" />
+              <circle cx="100" cy="100" r="88" fill="none" stroke="#fff" stroke-width="2" />
+              <path d="M84 150 L84 78 Q100 58 116 78 L116 150 Z" fill="#fff" />
+              <path d="M78 150 h44 l-6 14 h-32 z" fill="#2b5aa8" />
+              <path d="M92 92 l8 -14 l8 14 l-4 20 h-8 z" fill="#DB4657" opacity=".85" />
+              <path d="M40 96 q28 -46 44 -6" fill="none" stroke="#C79A3A" stroke-width="7" stroke-linecap="round" />
+              <path d="M160 96 q-28 -46 -44 -6" fill="none" stroke="#C79A3A" stroke-width="7" stroke-linecap="round" />
+            </svg>
+          }
+        </div>
+
+        <!-- الحمامة اللي بتلف حوالين البرج -->
+        <div class="dove" aria-hidden="true">
+          <svg viewBox="0 0 64 48">
+            <g class="dove-body">
+              <path
+                d="M8 30 C14 22 24 20 34 24 C40 26 46 24 52 18 C50 26 44 32 36 33 L44 40 L34 38 L30 44 L27 36 C18 37 11 35 8 30 Z"
+                fill="#ffffff"
+              />
+              <circle cx="49" cy="18" r="2.4" fill="#ffffff" />
+              <path d="M53 17 l5 -1 l-4 3 z" fill="#C79A3A" />
+              <circle cx="50" cy="17.4" r=".7" fill="#0C3B2A" />
+            </g>
+            <path class="wing wing-up" d="M24 24 C28 12 40 10 48 14 C40 18 34 22 30 27 Z" fill="#eef6ef" />
+            <path class="wing wing-down" d="M22 26 C26 34 38 38 46 36 C38 30 32 28 28 25 Z" fill="#dfeede" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- العناوين -->
+    <div class="titles">
+      <p class="rep reveal d1">الجمهورية العربية المصرية</p>
+      <h1 class="gov reveal d2">محافظة المنوفية</h1>
+      <div class="divider reveal d3"></div>
+      <p class="sys reveal d4">نظام إدارة الاستثمار والمشروعات</p>
+      <p class="phase reveal d5">المرحلة الأولى · إدارة التخطيط</p>
+
+      <a class="cta reveal d6" routerLink="/login">
+        الدخول إلى النظام
+        <svg viewBox="0 0 24 24" width="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 6l-6 6 6 6M5 12h14" />
+        </svg>
+      </a>
+    </div>
+  </main>
+
+  <footer class="foot reveal d6">© 2026 محافظة المنوفية — نظام SmartInvest · جميع الحقوق محفوظة</footer>
+</div>

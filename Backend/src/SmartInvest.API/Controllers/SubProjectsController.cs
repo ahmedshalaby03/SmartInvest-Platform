@@ -25,7 +25,6 @@ public class SubProjectsController : ControllerBase
         [FromQuery] int? mainProgramId,
         [FromQuery] int? subProgramId,
         [FromQuery] int? markazId,
-        [FromQuery] int? villageId,
         [FromQuery] int? priorityId,
         [FromQuery] int? statusId,
         [FromQuery] string? searchTerm,
@@ -37,7 +36,7 @@ public class SubProjectsController : ControllerBase
         var effectivePageSize = pageSize <= 0 ? 20 : pageSize;
 
         var result = await _subProjectService.SearchAsync(
-            mainProjectId, mainProgramId, subProgramId, markazId, villageId,
+            mainProjectId, mainProgramId, subProgramId, markazId,
             priorityId, statusId, searchTerm, effectivePage, effectivePageSize, cancellationToken);
 
         return Ok(result);

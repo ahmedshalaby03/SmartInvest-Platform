@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartInvest.Domain.Entities;
 using SmartInvest.Domain.Interfaces;
 using SmartInvest.Infrastructure.Data;
@@ -15,7 +15,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
     {
         return await DbSet
             .Include(x => x.MainProject).ThenInclude(m => m.SubProgram).ThenInclude(sp => sp.MainProgram)
-            .Include(x => x.Village).ThenInclude(v => v.Markaz).ThenInclude(m => m.Governorate)
+            .Include(x => x.Markaz).ThenInclude(m => m.Governorate)
             .Include(x => x.Priority)
             .Include(x => x.Status)
             .Include(x => x.ProjectSpecifications)
@@ -27,7 +27,6 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
         int? mainProgramId,
         int? subProgramId,
         int? markazId,
-        int? villageId,
         int? priorityId,
         int? statusId,
         string? searchTerm,
@@ -37,7 +36,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
     {
         var query = DbSet
             .Include(x => x.MainProject).ThenInclude(m => m.SubProgram).ThenInclude(sp => sp.MainProgram)
-            .Include(x => x.Village).ThenInclude(v => v.Markaz)
+            .Include(x => x.Markaz)
             .Include(x => x.Priority)
             .Include(x => x.Status)
             .AsQueryable();
@@ -59,12 +58,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
 
         if (markazId.HasValue)
         {
-            query = query.Where(x => x.Village.MarkazId == markazId);
-        }
-
-        if (villageId.HasValue)
-        {
-            query = query.Where(x => x.VillageId == villageId);
+            query = query.Where(x => x.MarkazId == markazId);
         }
 
         if (priorityId.HasValue)

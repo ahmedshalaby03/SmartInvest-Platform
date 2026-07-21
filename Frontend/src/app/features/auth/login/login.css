@@ -1,0 +1,141 @@
+:host { display: block; }
+
+.login {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100dvh;
+}
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; }
+  .brandside { display: none; }
+}
+
+/* ===== الجانب الأخضر ===== */
+.brandside {
+  position: relative;
+  background: linear-gradient(160deg, #0F4A34, #072A1E);
+  color: #EAF3EC;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  overflow: hidden;
+}
+.brandside::before {
+  content: "";
+  position: absolute;
+  width: 520px; height: 520px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .06);
+  box-shadow: 0 0 0 70px rgba(255, 255, 255, .03), 0 0 0 160px rgba(255, 255, 255, .02);
+  animation: pulse 8s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.06); opacity: 1; } }
+
+.back {
+  position: absolute; top: 22px; right: 24px;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #A9C4B2; text-decoration: none; font-size: 13px; font-weight: 700;
+  z-index: 2;
+}
+.back:hover { color: #E7CE8C; }
+
+.mark {
+  width: 96px; height: 96px;
+  display: grid; place-items: center;
+  z-index: 1;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .35));
+}
+.mark img { width: 100%; height: 100%; object-fit: contain; }
+.mark-fallback {
+  width: 88px; height: 88px;
+  display: grid; place-items: center;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #E7CE8C, #C79A3A);
+  color: #2A2107; font-size: 40px;
+}
+.brandside .rep { color: #A9C4B2; font-size: 13px; z-index: 1; }
+.brandside h2 { font-size: 30px; color: #fff; z-index: 1; }
+.divider {
+  width: 120px; height: 2px; background: #C79A3A; z-index: 1; position: relative;
+}
+.divider::after { content: "◆"; position: absolute; left: 50%; top: -10px; transform: translateX(-50%); color: #C79A3A; font-size: 12px; }
+.sys { color: #CBE0D1; z-index: 1; }
+.glass {
+  z-index: 1; text-align: center; margin-top: 8px;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  padding: 14px 22px;
+}
+.glass b { color: #E7CE8C; display: block; font-size: 17px; }
+.glass span { color: #A9C4B2; font-size: 12px; }
+
+/* ===== الجانب الأبيض ===== */
+.formside {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; background: var(--bg);
+}
+.lcard {
+  width: min(400px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+.lcard h2 { font-size: 24px; }
+.sub { color: var(--muted); font-size: 13px; margin: 4px 0 20px; }
+
+.alert {
+  background: var(--bad-bg);
+  border: 1px solid #F3C6CC;
+  color: #b32a39;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.lfield { margin-bottom: 16px; }
+.lfield label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+.box {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: var(--surface);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.box:focus-within { border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(21, 96, 63, .12); }
+.box svg { width: 17px; height: 17px; color: var(--muted); flex: none; }
+.box input { border: 0; flex: 1; font-family: inherit; font-size: 13.5px; background: transparent; outline: none; color: var(--ink); }
+.eye { border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 0; }
+.eye:hover { color: var(--ink); }
+
+.lbtn {
+  width: 100%;
+  background: var(--green-700);
+  color: #fff; border: 0;
+  padding: 13px;
+  border-radius: 11px;
+  font-weight: 800; font-size: 14px;
+  display: flex; gap: 8px; align-items: center; justify-content: center;
+  transition: background .2s ease, opacity .2s ease;
+}
+.lbtn:hover:not(:disabled) { background: var(--green-800); }
+.lbtn:disabled { opacity: .7; cursor: default; }
+
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.foot { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 18px; }

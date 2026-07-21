@@ -1,0 +1,180 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>تفاصيل المشروع</h1>
+      <p>عرض بيانات المشروع الفرعي ضمن الخطة</p>
+    </div>
+    <a class="si-btn" routerLink="/app/projects">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 6l6 6-6 6" /></svg>
+      رجوع للمشروعات
+    </a>
+  </header>
+
+  @if (loading()) {
+    <div class="state"><span class="spinner"></span> جاري التحميل…</div>
+  } @else if (error() || !project()) {
+    <div class="state error">{{ error() ?? 'المشروع غير موجود' }}</div>
+  } @else {
+    <!-- الهيدر -->
+    <div class="detail-head">
+      <div class="grow">
+        <div class="codes">
+          <span class="code-chip">الكود الرئيسي: {{ project()!.mainProjectName }}</span>
+          @if (project()!.code) {
+            <span class="code-chip">الكود الفرعي: {{ project()!.code }}</span>
+          } @else {
+            <span class="wait">بانتظار الاعتماد</span>
+          }
+        </div>
+        <h2>{{ project()!.name }}</h2>
+        <div class="sub">ضمن مشروع: {{ project()!.mainProjectName }}</div>
+      </div>
+    </div>
+
+    <!-- التابات -->
+    <div class="tabs">
+      <button class="tab" [class.on]="tab() === 'basic'" (click)="setTab('basic')">البيانات الأساسية</button>
+      <button class="tab" [class.on]="tab() === 'specs'" (click)="setTab('specs')">المواصفات الفنية</button>
+      <button class="tab" [class.on]="tab() === 'location'" (click)="setTab('location')">الموقع الجغرافي</button>
+      <button class="tab" [class.on]="tab() === 'subs'" (click)="setTab('subs')">المشاريع الفرعية</button>
+    </div>
+
+    <!-- 1) البيانات الأساسية -->
+    @if (tab() === 'basic') {
+      <div class="grid2">
+        <div class="card pad">
+          <div class="sec-title"><span class="i">ⓘ</span> نظرة عامة على المشروع</div>
+          <div class="info-grid">
+            <div class="row"><span>المشروع الرئيسي</span><b>{{ project()!.mainProjectName }}</b></div>
+            <div class="row"><span>المستوى</span><b>{{ project()!.projectLevel }}</b></div>
+            <div class="row"><span>المركز</span><b>{{ project()!.markazName }}</b></div>
+            <div class="row"><span>المحافظة</span><b>{{ project()!.governorateName }}</b></div>
+            <div class="row"><span>المكوّن العيني</span><b>{{ project()!.componentType || '—' }}</b></div>
+            <div class="row"><span>حالة المشروع</span><b>{{ project()!.statusName }}</b></div>
+          </div>
+          @if (project()!.description) {
+            <div class="sec-title mt">وصف المشروع</div>
+            <p class="desc">{{ project()!.description }}</p>
+          }
+        </div>
+        <div>
+          <div class="fund">
+            <h4>البيانات المالية للتخطيط</h4>
+            <div class="frow"><span>تمويل بنكي</span><b>{{ money(project()!.bankFunding) }} ج.م</b></div>
+            <div class="frow"><span>تمويل ذاتي</span><b>{{ money(project()!.selfFunding) }} ج.م</b></div>
+            <div class="frow total"><span>إجمالي التكلفة التقديرية</span><b>{{ money(project()!.totalCost) }} ج.م</b></div>
+            <div class="frow last"><span>الأولوية</span><b>{{ project()!.priorityName }}</b></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 2) المواصفات الفنية -->
+    @if (tab() === 'specs') {
+      <div class="card">
+        <div class="card-head">
+          <h3>المواصفات الفنية</h3>
+          <div class="grow"></div>
+          <button class="si-btn primary" (click)="openAddSpec()">
+            <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+            إضافة مواصفة
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>اسم المواصفة</th><th>القيمة</th><th>الوحدة</th><th>إجراءات</th></tr></thead>
+            <tbody>
+              @for (s of specs(); track s.id) {
+                <tr>
+                  <td>{{ s.specificationName }}</td>
+                  <td class="tnum">{{ s.specificationValue }}</td>
+                  <td>{{ s.unit }}</td>
+                  <td>
+                    <div class="acts">
+                      <button class="act" title="تعديل" (click)="openEditSpec(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg></button>
+                      <button class="act danger" title="حذف" (click)="deleteSpec(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" /></svg></button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty">لا توجد مواصفات مسجّلة بعد.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- 3) الموقع الجغرافي -->
+    @if (tab() === 'location') {
+      <div class="grid2">
+        <div class="card pad">
+          <div class="sec-title">الموقع الجغرافي</div>
+          <div class="map">
+            <div class="pin"><div class="dot"></div>موقع المشروع</div>
+            @if (project()!.latitude != null) {
+              <div class="coords tnum">{{ project()!.latitude }} , {{ project()!.longitude }}</div>
+            }
+          </div>
+        </div>
+        <div class="card pad">
+          <div class="info-grid one">
+            <div class="row"><span>المحافظة</span><b>{{ project()!.governorateName }}</b></div>
+            <div class="row"><span>المركز</span><b>{{ project()!.markazName }}</b></div>
+            <div class="row"><span>خط العرض</span><b>{{ project()!.latitude ?? '—' }}</b></div>
+            <div class="row"><span>خط الطول</span><b>{{ project()!.longitude ?? '—' }}</b></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 4) المشاريع الفرعية الشقيقة -->
+    @if (tab() === 'subs') {
+      <div class="card">
+        <div class="card-head"><h3>المشاريع الفرعية ضمن نفس المشروع الرئيسي</h3></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>المشروع الفرعي</th><th>الكود</th><th>إجمالي التكلفة</th><th>الحالة</th></tr></thead>
+            <tbody>
+              @for (sib of siblings(); track sib.id) {
+                <tr [class.current]="sib.id === project()!.id">
+                  <td>{{ sib.name }}</td>
+                  <td>
+                    @if (sib.code) { <span class="tnum">{{ sib.code }}</span> } @else { <span class="wait">بانتظار الاعتماد</span> }
+                  </td>
+                  <td class="tnum">{{ money(sib.totalCost) }}</td>
+                  <td>{{ sib.statusName }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty">لا توجد مشاريع فرعية.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- نموذج مواصفة -->
+  @if (showSpecForm()) {
+    <div class="si-overlay" (click)="closeSpecForm()">
+      <div class="si-modal" (click)="$event.stopPropagation()" style="width:min(480px,100%)">
+        <div class="si-modal-head">
+          <div class="grow"><h3>{{ editingSpecId() ? 'تعديل مواصفة' : 'إضافة مواصفة' }}</h3></div>
+          <button class="si-x" (click)="closeSpecForm()">×</button>
+        </div>
+        <div class="si-modal-body">
+          <div class="si-grid">
+            <div class="si-fld full"><label>اسم المواصفة <span class="req">*</span></label><input [ngModel]="sName()" (ngModelChange)="sName.set($event)" placeholder="مثال: طول الطريق" /></div>
+            <div class="si-fld"><label>القيمة <span class="req">*</span></label><input [ngModel]="sValue()" (ngModelChange)="sValue.set($event)" placeholder="5200" /></div>
+            <div class="si-fld"><label>الوحدة <span class="req">*</span></label><input [ngModel]="sUnit()" (ngModelChange)="sUnit.set($event)" placeholder="متر طولي" /></div>
+          </div>
+        </div>
+        <div class="si-modal-foot">
+          <button class="si-btn primary" [disabled]="savingSpec()" (click)="saveSpec()">حفظ</button>
+          <button class="si-btn" (click)="closeSpecForm()">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

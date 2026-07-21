@@ -14,8 +14,8 @@ public class UpdateSubProjectDtoValidator : AbstractValidator<UpdateSubProjectDt
         RuleFor(x => x.ProjectLevel)
             .NotEmpty().WithMessage("المستوى مطلوب");
 
-        RuleFor(x => x.VillageId)
-            .GreaterThan(0).WithMessage("يجب اختيار القرية");
+        RuleFor(x => x.MarkazId)
+            .GreaterThan(0).WithMessage("يجب اختيار المركز");
 
         RuleFor(x => x.PriorityId)
             .GreaterThan(0).WithMessage("يجب اختيار الأولوية");

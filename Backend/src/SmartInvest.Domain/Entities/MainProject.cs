@@ -7,6 +7,7 @@
         [Required, MaxLength(50)]
         public string MainProjectCode { get; set; } = string.Empty; 
         public string MainProjectName { get; set; } = string.Empty;
+        public string ExecutingAgency { get; set; } = string.Empty;
         [ForeignKey("SubProgram")]
         public int SubProgramId { get; set; }
         public virtual SubProgram SubProgram { get; set; }

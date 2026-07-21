@@ -1,0 +1,138 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>إدارة المستخدمين</h1>
+      <p>إنشاء وإدارة حسابات موظفي إدارة التخطيط</p>
+    </div>
+    <button class="si-btn gold" (click)="openForm()">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+      إضافة مستخدم جديد
+    </button>
+  </header>
+
+  <!-- المؤشرات -->
+  <div class="kpis">
+    <div class="kpi"><span class="lab">إجمالي المستخدمين</span><b class="val tnum">{{ total() }}</b></div>
+    <div class="kpi ok"><span class="lab">النشطين</span><b class="val tnum">{{ activeCount() }}</b></div>
+    <div class="kpi bad"><span class="lab">المعطّلين</span><b class="val tnum">{{ inactiveCount() }}</b></div>
+    <div class="kpi gold"><span class="lab">مديرو التخطيط</span><b class="val tnum">{{ managerCount() }}</b></div>
+  </div>
+
+  <!-- الأدوات -->
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+      <input placeholder="البحث بالاسم أو البريد أو اسم المستخدم…" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    </div>
+    <div class="seg">
+      <button [class.on]="statusFilter() === 'all'" (click)="statusFilter.set('all')">الكل</button>
+      <button [class.on]="statusFilter() === 'active'" (click)="statusFilter.set('active')">نشط</button>
+      <button [class.on]="statusFilter() === 'inactive'" (click)="statusFilter.set('inactive')">غير نشط</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="state"><span class="spinner"></span> جاري تحميل المستخدمين…</div>
+  } @else if (error()) {
+    <div class="state error">{{ error() }} <button class="si-btn" (click)="load()">إعادة المحاولة</button></div>
+  } @else if (filtered().length === 0) {
+    <div class="state">لا يوجد مستخدمون مطابقون.</div>
+  } @else {
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم واسم المستخدم</th>
+              <th>البريد الإلكتروني</th>
+              <th>الدور</th>
+              <th>الحالة</th>
+              <th>تاريخ الإنشاء</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of paged(); track u.id) {
+              <tr>
+                <td>
+                  <div class="user">
+                    <div class="av" [class.mgr]="u.role === Roles.PlanningManager">{{ initial(u.fullName) }}</div>
+                    <div><b>{{ u.fullName }}</b><div class="uname">{{ u.userName }}</div></div>
+                  </div>
+                </td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="badge" [class.mgr]="u.role === Roles.PlanningManager">
+                    {{ u.role === Roles.PlanningManager ? '👑' : '👤' }} {{ roleLabel(u.role) }}
+                  </span>
+                </td>
+                <td><span class="pill" [class.ok]="u.isActive">{{ u.isActive ? 'نشط' : 'غير نشط' }}</span></td>
+                <td class="tnum">{{ u.createdAt | date: 'yyyy/MM/dd' }}</td>
+                <td>
+                  <div class="acts">
+                    <button class="act" title="إعادة تعيين كلمة المرور" (click)="resetPassword(u)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                    </button>
+                    <button class="act" [class.danger]="u.isActive" [class.approve]="!u.isActive"
+                            [title]="u.isActive ? 'تعطيل' : 'تفعيل'" (click)="toggleActive(u)">
+                      @if (u.isActive) {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" /><path d="m5.5 5.5 13 13" /></svg>
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7" /></svg>
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="tblfoot">
+        <span class="muted">عرض {{ rangeStart() }}–{{ rangeEnd() }} من أصل {{ filtered().length }} مستخدم</span>
+        <div class="pager">
+          <button (click)="goToPage(page() - 1)" [disabled]="page() === 1">‹</button>
+          @for (p of [].constructor(totalPages()); track $index) {
+            <button [class.on]="page() === $index + 1" (click)="goToPage($index + 1)">{{ $index + 1 }}</button>
+          }
+          <button (click)="goToPage(page() + 1)" [disabled]="page() === totalPages()">›</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add user modal -->
+  @if (showForm()) {
+    <div class="si-overlay" (click)="closeForm()">
+      <div class="si-modal" (click)="$event.stopPropagation()" style="width:min(560px,100%)">
+        <div class="si-modal-head">
+          <div class="grow"><h3>إضافة مستخدم جديد</h3><p>إنشاء حساب موظف بإدارة التخطيط</p></div>
+          <button class="si-x" (click)="closeForm()" aria-label="إغلاق">×</button>
+        </div>
+        <div class="si-modal-body">
+          @if (formError()) { <div class="si-err">{{ formError() }}</div> }
+          <div class="si-grid">
+            <div class="si-fld"><label>الاسم الكامل <span class="req">*</span></label><input [ngModel]="fFullName()" (ngModelChange)="fFullName.set($event)" placeholder="الاسم الرباعي" /></div>
+            <div class="si-fld"><label>اسم المستخدم <span class="req">*</span></label><input [ngModel]="fUserName()" (ngModelChange)="fUserName.set($event)" placeholder="ahmed.sayed" /></div>
+            <div class="si-fld full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" [ngModel]="fEmail()" (ngModelChange)="fEmail.set($event)" placeholder="example@menoufia.gov.eg" /></div>
+            <div class="si-fld"><label>رقم الهاتف</label><input [ngModel]="fPhone()" (ngModelChange)="fPhone.set($event)" placeholder="01XXXXXXXXX" /></div>
+            <div class="si-fld"><label>الدور الوظيفي <span class="req">*</span></label>
+              <select [ngModel]="fRole()" (ngModelChange)="fRole.set($event)">
+                <option [value]="Roles.PlanningEmployee">موظف تخطيط</option>
+                <option [value]="Roles.PlanningManager">مدير التخطيط</option>
+              </select>
+            </div>
+            <div class="si-fld"><label>كلمة المرور <span class="req">*</span></label><input type="password" [ngModel]="fPassword()" (ngModelChange)="fPassword.set($event)" placeholder="••••••••" /></div>
+            <div class="si-fld"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" [ngModel]="fConfirm()" (ngModelChange)="fConfirm.set($event)" placeholder="••••••••" /></div>
+          </div>
+        </div>
+        <div class="si-modal-foot">
+          <button class="si-btn primary" [disabled]="saving()" (click)="submitForm()">
+            @if (saving()) { جاري الإضافة… } @else { إضافة المستخدم }
+          </button>
+          <button class="si-btn" (click)="closeForm()">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

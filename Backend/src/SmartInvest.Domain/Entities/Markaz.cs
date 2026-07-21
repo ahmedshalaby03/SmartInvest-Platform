@@ -8,7 +8,8 @@
 
         [ForeignKey("Governorate")]
         public int GovernorateId { get; set; }
-        public virtual Governorate Governorate { get; set; } 
+        public virtual Governorate Governorate { get; set; }
         public virtual ICollection<Village> Villages { get; set; }
+        public virtual ICollection<SubProject> SubProjects { get; set; }
     }
 }

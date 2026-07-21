@@ -1,0 +1,214 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>المشروعات</h1>
+      <p>إدارة مشروعات خطة التنمية الاستثمارية</p>
+    </div>
+    <span class="chip">خطة التنمية الاستثمارية 2026/2027</span>
+  </header>
+
+  <!-- شريط الأدوات العلوي: السنة + فلتر الحالة + الإضافة -->
+  <div class="toolbar">
+    <select class="mini"><option>2026/2027</option></select>
+    <div class="seg">
+      <button [class.on]="approvalFilter() === 'all'" (click)="approvalFilter.set('all')">كل المشروعات</button>
+      <button [class.on]="approvalFilter() === 'approved'" (click)="approvalFilter.set('approved')">معتمدة</button>
+      <button [class.on]="approvalFilter() === 'pending'" (click)="approvalFilter.set('pending')">بانتظار الاعتماد</button>
+    </div>
+    <div class="grow"></div>
+    <div class="menu-wrap">
+      <button class="si-btn primary" (click)="toggleAddMenu()">
+        <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+        إضافة مشروع
+        <svg viewBox="0 0 24 24" width="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      @if (addMenuOpen()) {
+        <div class="menu">
+          <button (click)="openAddMain()"><span class="mi main">◆</span> مشروع رئيسي</button>
+          <button (click)="openAddSub()"><span class="mi sub">◆</span> مشروع فرعي</button>
+        </div>
+      }
+    </div>
+    <button class="si-btn" (click)="load()">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" /></svg>
+      تحديث
+    </button>
+  </div>
+
+  <!-- المؤشرات -->
+  <div class="kpis">
+    <div class="kpi"><span class="lab">إجمالي المشاريع الفرعية</span><b class="val tnum">{{ kpiTotal() }}</b></div>
+    <div class="kpi ok"><span class="lab">المعتمدة</span><b class="val tnum">{{ kpiApproved() }}</b></div>
+    <div class="kpi warn"><span class="lab">بانتظار الاعتماد</span><b class="val tnum">{{ kpiPending() }}</b></div>
+    <div class="kpi gold"><span class="lab">إجمالي تمويل بنكي</span><b class="val tnum">{{ money(kpiBank()) }} <small>ج.م</small></b></div>
+    <div class="kpi gold"><span class="lab">إجمالي تمويل ذاتي</span><b class="val tnum">{{ money(kpiSelf()) }} <small>ج.م</small></b></div>
+  </div>
+
+  <!-- الفلاتر -->
+  <div class="filterbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+      <input placeholder="ابحث بكود المشروع أو الاسم…" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    </div>
+    <div class="seg small">
+      <button [class.on]="approvalFilter() === 'all'" (click)="approvalFilter.set('all')">الكل</button>
+      <button [class.on]="approvalFilter() === 'approved'" (click)="approvalFilter.set('approved')">معتمد</button>
+      <button [class.on]="approvalFilter() === 'pending'" (click)="approvalFilter.set('pending')">غير معتمد</button>
+    </div>
+    <button class="si-btn" (click)="showAdvanced.set(!showAdvanced())">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
+      الفلاتر المتقدمة
+    </button>
+  </div>
+
+  @if (showAdvanced()) {
+    <div class="advanced">
+      <div class="fld"><label>البرنامج الرئيسي</label>
+        <select [ngModel]="fMainProgram()" (ngModelChange)="fMainProgram.set($event)">
+          <option value="">الكل</option>
+          @for (p of mainPrograms(); track p.id) { <option [value]="p.name">{{ p.name }}</option> }
+        </select>
+      </div>
+      <div class="fld"><label>البرنامج الفرعي</label>
+        <select [ngModel]="fSubProgram()" (ngModelChange)="fSubProgram.set($event)">
+          <option value="">الكل</option>
+          @for (s of subPrograms(); track s.id) { <option [value]="s.name">{{ s.name }}</option> }
+        </select>
+      </div>
+      <div class="fld"><label>المستوى</label>
+        <select [ngModel]="fLevel()" (ngModelChange)="fLevel.set($event)">
+          <option value="">الكل</option><option value="محلي">محلي</option><option value="مشترك">مشترك</option>
+        </select>
+      </div>
+      <div class="fld"><label>جهة التنفيذ</label>
+        <select [ngModel]="fAgency()" (ngModelChange)="fAgency.set($event)">
+          <option value="">الكل</option>
+          @for (a of agencies; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </div>
+      <div class="fld"><label>المركز</label>
+        <select [ngModel]="fMarkaz()" (ngModelChange)="fMarkaz.set($event)">
+          <option value="">الكل</option>
+          @for (mk of markazList(); track mk.id) { <option [value]="mk.id">{{ mk.name }}</option> }
+        </select>
+      </div>
+      <div class="fld"><label>الأولوية</label>
+        <select [ngModel]="fPriority()" (ngModelChange)="fPriority.set($event)">
+          <option value="">الكل</option>
+          @for (p of priorities(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </div>
+      <div class="fld"><label>نوع التمويل</label>
+        <select [ngModel]="fFunding()" (ngModelChange)="fFunding.set($event)">
+          <option value="">الكل</option><option value="bank">تمويل بنكي</option><option value="self">تمويل ذاتي</option>
+        </select>
+      </div>
+      <div class="fld end"><button class="si-btn" (click)="clearFilters()">مسح الكل</button></div>
+    </div>
+  }
+
+  <!-- المحتوى -->
+  @if (loading()) {
+    <div class="state"><span class="spinner"></span> جاري تحميل المشروعات…</div>
+  } @else if (error()) {
+    <div class="state error">{{ error() }} <button class="si-btn" (click)="load()">إعادة المحاولة</button></div>
+  } @else if (filteredRows().length === 0) {
+    <div class="state">لا توجد مشاريع مطابقة.</div>
+  } @else {
+    <div class="card">
+      <div class="card-head">
+        <h3>جدول المشروعات</h3><span class="pill-count">{{ kpiTotal() }} مشروع فرعي</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الكود الرئيسي</th><th>المشروع الرئيسي</th><th>البرنامج</th><th>جهة التنفيذ</th>
+              <th>الكود الفرعي</th><th>المشروع الفرعي</th><th>المستوى</th><th>المركز</th>
+              <th>المكوّن العيني</th><th>تمويل بنكي</th><th>تمويل ذاتي</th><th>الحالة</th><th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of pagedRows(); track r.main.id) {
+              <!-- ترويسة البرنامج -->
+              @if (r.showHeader) {
+                <tr class="group">
+                  <td colspan="13">📁 {{ r.programLabel }} <span class="cnt">{{ r.groupCount }} مشروع رئيسي</span></td>
+                </tr>
+              }
+              <!-- صف المشروع الرئيسي -->
+              <tr class="main-row">
+                <td><span class="code">{{ r.main.code }}</span></td>
+                <td class="mname">{{ r.main.name }}</td>
+                <td colspan="2">{{ r.main.executingAgency }}</td>
+                <td colspan="5" class="note">({{ r.subs.length }} مشروع فرعي)</td>
+                <td class="tnum">{{ money(r.main.totalBankFunding) }}</td>
+                <td class="tnum">{{ money(r.main.totalSelfFunding) }}</td>
+                <td></td>
+                <td>
+                  <div class="acts">
+                    <button class="act" title="مشروع فرعي" (click)="openAddSubFor(r.main)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg></button>
+                    <button class="act" title="تعديل" (click)="openEditMain(r.main)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg></button>
+                    @if (isManager()) {
+                      <button class="act danger" title="حذف" (click)="deleteMain(r.main)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" /></svg></button>
+                    }
+                  </div>
+                </td>
+              </tr>
+              <!-- صفوف الفرعي -->
+              @for (s of r.subs; track s.id) {
+                <tr class="sub-row">
+                  <td></td><td></td>
+                  <td>{{ r.main.subProgramName }}</td>
+                  <td>{{ agencyOf(s.mainProjectId) }}</td>
+                  <td>
+                    @if (s.code) { <span class="tnum">{{ s.code }}</span> } @else { <span class="wait">بانتظار الاعتماد</span> }
+                  </td>
+                  <td class="sname">{{ s.name }}</td>
+                  <td>{{ s.projectLevel }}</td>
+                  <td>{{ s.markazName }}</td>
+                  <td>{{ s.componentType }}</td>
+                  <td class="tnum">{{ money(s.bankFunding) }}</td>
+                  <td class="tnum">{{ money(s.selfFunding) }}</td>
+                  <td>
+                    @if (s.code) { <span class="pill ok">معتمد</span> } @else { <span class="pill warn">بانتظار الاعتماد</span> }
+                  </td>
+                  <td>
+                    <div class="acts">
+                      <a class="act" title="تفاصيل" [routerLink]="['/app/projects', s.id]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg></a>
+                      <button class="act" title="تعديل" (click)="openEditSub(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg></button>
+                      @if (isManager()) {
+                        <button class="act danger" title="حذف" (click)="deleteSub(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" /></svg></button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+            <!-- الإجمالي -->
+            <tr class="foot">
+              <td colspan="9">الإجمالي الكلي للمشروعات المعروضة</td>
+              <td class="tnum">{{ money(shownBank()) }} ج.م</td>
+              <td class="tnum">{{ money(shownSelf()) }} ج.م</td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tblfoot">
+        <span class="muted">عرض {{ rangeStart() }}–{{ rangeEnd() }} من أصل {{ filteredRows().length }} مشروع رئيسي</span>
+        <div class="pager">
+          <button (click)="goToPage(page() - 1)" [disabled]="page() === 1">‹</button>
+          @for (p of [].constructor(totalPages()); track $index) {
+            <button [class.on]="page() === $index + 1" (click)="goToPage($index + 1)">{{ $index + 1 }}</button>
+          }
+          <button (click)="goToPage(page() + 1)" [disabled]="page() === totalPages()">›</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modals -->
+  <app-main-project-form [open]="showMainForm()" [edit]="mainEdit()" (close)="closeModals()" (saved)="onSaved()" />
+  <app-sub-project-form [open]="showSubForm()" [edit]="subEdit()" [locked]="subLocked()" [mains]="mains()" (close)="closeModals()" (saved)="onSaved()" />
+</div>
