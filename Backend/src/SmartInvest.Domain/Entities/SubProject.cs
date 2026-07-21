@@ -11,7 +11,8 @@
         public string ProjectLevel { get; set; } = string.Empty;
         public string ComponentType { get; set; } = string.Empty;
         public string AccountingUnit { get; set; } = string.Empty;
-        public decimal TotalCost { get; set; }
+        [NotMapped]
+        public decimal TotalCost => BankFunding + SelfFunding; 
         public string ProjectNature { get; set; } = string.Empty;
 
         // Nullables based on ERD
@@ -34,6 +35,15 @@
         public double? Longitude { get; set; }
         [ForeignKey("Status")]
         public int StatusId { get; set; }
+        
+        [MaxLength(50)]
+        public string? SubProjectCode { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal BankFunding { get; set; }  
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal SelfFunding { get; set; } 
         public virtual ProjectStatus Status { get; set; }
 
         public virtual ICollection<PlanProject> PlanProjects { get; set; }

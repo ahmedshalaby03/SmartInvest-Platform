@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using SmartInvest.Domain.Common;
 using SmartInvest.Domain.Interfaces;
 using SmartInvest.Infrastructure.Data;
 
@@ -15,13 +14,20 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
     }
 
-    public IGenericRepository<T> Repository<T>() where T : BaseEntity
-        => (IGenericRepository<T>)_repositories.GetOrAdd(
+    public IGenericRepository<T> Repository<T>() where T : class
+    {
+        return (IGenericRepository<T>)_repositories.GetOrAdd(
             typeof(T),
             _ => new GenericRepository<T>(_context));
+    }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => _context.SaveChangesAsync(cancellationToken);
+    {
+        return _context.SaveChangesAsync(cancellationToken);
+    }
 
-    public void Dispose() => _context.Dispose();
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
 }

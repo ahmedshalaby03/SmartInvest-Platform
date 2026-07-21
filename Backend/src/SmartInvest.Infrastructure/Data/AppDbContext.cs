@@ -13,11 +13,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<InvestmentProject> InvestmentProjects => Set<InvestmentProject>();
+    public DbSet<MainProject> MainProjects => Set<MainProject>();
+    public DbSet<SubProject> SubProjects => Set<SubProject>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
         // Apply all IEntityTypeConfiguration<T> defined in this assembly.
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }

@@ -7,7 +7,7 @@ namespace SmartInvest.Domain.Interfaces;
 /// </summary>
 public interface IUnitOfWork : IDisposable
 {
-    IGenericRepository<T> Repository<T>() where T : BaseEntity;
+    IGenericRepository<T> Repository<T>() where T : class;
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

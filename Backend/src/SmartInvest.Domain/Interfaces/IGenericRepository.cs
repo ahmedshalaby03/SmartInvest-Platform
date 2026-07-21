@@ -6,7 +6,7 @@ namespace SmartInvest.Domain.Interfaces;
 /// <summary>
 /// Generic repository contract. Implemented in the Infrastructure layer.
 /// </summary>
-public interface IGenericRepository<T> where T : BaseEntity
+public interface IGenericRepository<T> where T : class
 {
     Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
