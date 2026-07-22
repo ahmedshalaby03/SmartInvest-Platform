@@ -18,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SmartInvest.Application.Interfaces.ICurrentUserService, SmartInvest.API.Common.CurrentUserService>();
+
 // ---------------------------------------------------------------------------
 // JWT Authentication
 // ---------------------------------------------------------------------------
@@ -95,7 +98,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager };
+    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager, Roles.ExecutiveAgency, Roles.Contractor };
 
     foreach (var role in roles)
     {

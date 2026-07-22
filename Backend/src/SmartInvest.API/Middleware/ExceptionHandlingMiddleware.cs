@@ -46,6 +46,11 @@ public class ExceptionHandlingMiddleware
                 response = new { message = businessRuleException.Message };
                 break;
 
+            case ForbiddenAccessException forbiddenException:
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                response = new { message = forbiddenException.Message };
+                break;
+
             case ValidationException validationException:
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 var errors = validationException.Errors.Select(e => e.ErrorMessage);
