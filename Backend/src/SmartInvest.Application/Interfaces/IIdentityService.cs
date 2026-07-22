@@ -15,4 +15,20 @@ public interface IIdentityService
     Task SetActiveStatusAsync(string userId, bool isActive, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken cancellationToken = default);
+
+    Task<UserDto> CreateAgencyUserAsync(string userName, string email, string? phoneNumber, string password, int executiveAgencyId, CancellationToken cancellationToken = default);
+
+    Task<UserDto> CreateContractorUserAsync(string userName, string email, string? phoneNumber, string password, int contractorId, CancellationToken cancellationToken = default);
+
+    Task<UserDto?> GetUserByExecutiveAgencyIdAsync(int executiveAgencyId, CancellationToken cancellationToken = default);
+
+    Task<UserDto?> GetUserByContractorIdAsync(int contractorId, CancellationToken cancellationToken = default);
+
+    Task ResetPasswordForAgencyAsync(int executiveAgencyId, string newPassword, CancellationToken cancellationToken = default);
+
+    Task ResetPasswordForContractorAsync(int contractorId, string newPassword, CancellationToken cancellationToken = default);
+
+    Task DeleteUserByExecutiveAgencyIdAsync(int executiveAgencyId, CancellationToken cancellationToken = default);
+
+    Task DeleteUserByContractorIdAsync(int contractorId, CancellationToken cancellationToken = default);
 }

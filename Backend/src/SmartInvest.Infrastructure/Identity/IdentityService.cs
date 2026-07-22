@@ -179,6 +179,121 @@ public class IdentityService : IIdentityService
         return result;
     }
 
+    public async Task<UserDto> CreateAgencyUserAsync(string userName, string email, string? phoneNumber, string password, int executiveAgencyId, CancellationToken cancellationToken = default)
+    {
+        var user = new ApplicationUser
+        {
+            UserName = userName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            FullName = userName,
+            IsActive = true,
+            ExecutiveAgencyId = executiveAgencyId
+        };
+
+        var createResult = await _userManager.CreateAsync(user, password);
+        if (!createResult.Succeeded)
+        {
+            var errors = string.Join(" - ", createResult.Errors.Select(e => e.Description));
+            throw new BusinessRuleException(errors);
+        }
+
+        await _userManager.AddToRoleAsync(user, Roles.ExecutiveAgency);
+
+        return MapUser(user, Roles.ExecutiveAgency);
+    }
+
+    public async Task<UserDto> CreateContractorUserAsync(string userName, string email, string? phoneNumber, string password, int contractorId, CancellationToken cancellationToken = default)
+    {
+        var user = new ApplicationUser
+        {
+            UserName = userName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            FullName = userName,
+            IsActive = true,
+            ContractorId = contractorId
+        };
+
+        var createResult = await _userManager.CreateAsync(user, password);
+        if (!createResult.Succeeded)
+        {
+            var errors = string.Join(" - ", createResult.Errors.Select(e => e.Description));
+            throw new BusinessRuleException(errors);
+        }
+
+        await _userManager.AddToRoleAsync(user, Roles.Contractor);
+
+        return MapUser(user, Roles.Contractor);
+    }
+
+    public async Task<UserDto?> GetUserByExecutiveAgencyIdAsync(int executiveAgencyId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ExecutiveAgencyId == executiveAgencyId, cancellationToken);
+        return user == null ? null : MapUser(user, Roles.ExecutiveAgency);
+    }
+
+    public async Task<UserDto?> GetUserByContractorIdAsync(int contractorId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ContractorId == contractorId, cancellationToken);
+        return user == null ? null : MapUser(user, Roles.Contractor);
+    }
+
+    public async Task ResetPasswordForAgencyAsync(int executiveAgencyId, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ExecutiveAgencyId == executiveAgencyId, cancellationToken);
+        if (user == null)
+        {
+            throw new NotFoundException("لا يوجد حساب دخول مرتبط بهذه الجهة");
+        }
+
+        await ResetPasswordAsync(user.Id, newPassword, cancellationToken);
+    }
+
+    public async Task ResetPasswordForContractorAsync(int contractorId, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ContractorId == contractorId, cancellationToken);
+        if (user == null)
+        {
+            throw new NotFoundException("لا يوجد حساب دخول مرتبط بهذا المقاول");
+        }
+
+        await ResetPasswordAsync(user.Id, newPassword, cancellationToken);
+    }
+
+    public async Task DeleteUserByExecutiveAgencyIdAsync(int executiveAgencyId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ExecutiveAgencyId == executiveAgencyId, cancellationToken);
+        if (user != null)
+        {
+            await _userManager.DeleteAsync(user);
+        }
+    }
+
+    public async Task DeleteUserByContractorIdAsync(int contractorId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ContractorId == contractorId, cancellationToken);
+        if (user != null)
+        {
+            await _userManager.DeleteAsync(user);
+        }
+    }
+
+    private static UserDto MapUser(ApplicationUser user, string role)
+    {
+        return new UserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            UserName = user.UserName ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            Role = role,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+    }
+
     private string GenerateJwtToken(ApplicationUser user, string role, DateTime expiresAt)
     {
         var claims = new List<Claim>
