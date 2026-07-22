@@ -46,6 +46,10 @@
         public decimal SelfFunding { get; set; } 
         public virtual ProjectStatus Status { get; set; }
 
+        [ForeignKey("ExecutiveAgency")]
+        public int? ExecutiveAgencyId { get; set; }
+        public virtual ExecutiveAgency? ExecutiveAgency { get; set; }
+
         public virtual ICollection<PlanProject> PlanProjects { get; set; }
         public virtual ICollection<ProjectAssignment>? ProjectAssignments { get; set; }
         public virtual ICollection<ProjectSpecification>? ProjectSpecifications { get; set; }

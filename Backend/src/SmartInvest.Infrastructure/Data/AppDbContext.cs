@@ -15,6 +15,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<InvestmentProject> InvestmentProjects => Set<InvestmentProject>();
     public DbSet<MainProject> MainProjects => Set<MainProject>();
     public DbSet<SubProject> SubProjects => Set<SubProject>();
+    public DbSet<ProjectAssignmentChangeRequest> ProjectAssignmentChangeRequests => Set<ProjectAssignmentChangeRequest>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
