@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectSpecificationService, ProjectSpecificationService>();
         services.AddScoped<ILookupService, LookupService>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IExecutiveAgencyService, ExecutiveAgencyService>();
 
         return services;
     }
