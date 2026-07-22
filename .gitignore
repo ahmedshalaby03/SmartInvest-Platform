@@ -518,3 +518,6 @@ appsettings.*.Local.json
 # ══════════════════════════════════════════════════════════════
 .DS_Store
 Thumbs.db
+
+# Subagent-driven-development scratch (task briefs, review packages, ledger)
+.superpowers/
