@@ -190,6 +190,16 @@ public class IdentityService : IIdentityService
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
+        if (user.ExecutiveAgencyId.HasValue)
+        {
+            claims.Add(new Claim("executiveAgencyId", user.ExecutiveAgencyId.Value.ToString()));
+        }
+
+        if (user.ContractorId.HasValue)
+        {
+            claims.Add(new Claim("contractorId", user.ContractorId.Value.ToString()));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
