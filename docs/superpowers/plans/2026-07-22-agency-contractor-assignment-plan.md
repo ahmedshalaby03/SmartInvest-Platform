@@ -2283,13 +2283,21 @@ public class ProjectAssignmentRepository : GenericRepository<ProjectAssignment>,
 }
 ```
 
-- [ ] **Step 2: Register the repository in DI**
+- [ ] **Step 2: Register the repository AND the service in DI**
 
 In `Backend/src/SmartInvest.Infrastructure/DependencyInjection.cs`, add right after `services.AddScoped<ISubProjectRepository, SubProjectRepository>();`:
 
 ```csharp
         services.AddScoped<IProjectAssignmentRepository, ProjectAssignmentRepository>();
 ```
+
+And add the service registration at the end of the service-registration block, right after `services.AddScoped<IContractTypeService, ContractTypeService>();` (added in Task 7):
+
+```csharp
+        services.AddScoped<IProjectAssignmentService, ProjectAssignmentService>();
+```
+
+**Both lines are required** — without the second one, `ProjectAssignmentsController` cannot be constructed at runtime (the DI container has no registration for `IProjectAssignmentService`), and every request to it fails.
 
 - [ ] **Step 3: DTOs**
 
@@ -2455,6 +2463,9 @@ public class ProjectAssignmentService : IProjectAssignmentService
 
     public async Task<IReadOnlyList<ProjectAssignmentDto>> GetBySubProjectAsync(int subProjectId, CancellationToken cancellationToken = default)
     {
+        var subProject = await GetSubProjectOrThrowAsync(subProjectId, cancellationToken);
+        EnsureAgencyOwnership(subProject);
+
         var assignments = await _assignmentRepository.GetBySubProjectAsync(subProjectId, cancellationToken);
         return _mapper.Map<List<ProjectAssignmentDto>>(assignments);
     }
