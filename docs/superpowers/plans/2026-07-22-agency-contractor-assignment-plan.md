@@ -240,12 +240,28 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SmartInvest.Application.Interfaces.ICurrentUserService, SmartInvest.API.Common.CurrentUserService>();
 ```
 
-- [ ] **Step 7: Build and verify**
+- [ ] **Step 7: Seed the two new roles at startup**
+
+In `Backend/src/SmartInvest.API/Program.cs`, find:
+
+```csharp
+    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager };
+```
+
+Replace with:
+
+```csharp
+    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager, Roles.ExecutiveAgency, Roles.Contractor };
+```
+
+This must land in this task (not later) — Task 5/6 create users with `UserManager.AddToRoleAsync(user, Roles.ExecutiveAgency/Contractor)`, which fails at runtime if the role does not already exist in `AspNetRoles`.
+
+- [ ] **Step 8: Build and verify**
 
 Run: `dotnet build Backend`
 Expected: `Build succeeded. 0 Error(s)`
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add Backend/src/SmartInvest.Domain/Common/Roles.cs \
@@ -3121,48 +3137,9 @@ git commit -m "feat: add contractor change-request approval workflow and reusabl
 
 ---
 
-### Task 11: Seed the two new roles at startup
-
-**Files:**
-- Modify: `Backend/src/SmartInvest.API/Program.cs`
-
-**Interfaces:**
-- Consumes: `Roles.ExecutiveAgency`, `Roles.Contractor` (Task 1).
-- Produces: nothing consumed by later tasks — this is the last task.
-
-- [ ] **Step 1: Add the two roles to the seeding array**
-
-In `Backend/src/SmartInvest.API/Program.cs`, find:
-
-```csharp
-    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager };
-```
-
-Replace with:
-
-```csharp
-    string[] roles = { Roles.PlanningEmployee, Roles.PlanningManager, Roles.ExecutiveAgency, Roles.Contractor };
-```
-
-- [ ] **Step 2: Build and verify**
-
-Run: `dotnet build Backend`
-Expected: `Build succeeded. 0 Error(s)`
-
-- [ ] **Step 3: Manual verification**
-
-Run the API once (`dotnet run --project Backend/src/SmartInvest.API`) so the seeding block in `Program.cs` executes, then check the `AspNetRoles` table (or re-run `GET /api/agencies` login flow from Task 5, which already implicitly required the `ExecutiveAgency` role to exist) confirms no `BusinessRuleException`/role-not-found error occurs on `AddToRoleAsync`.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add Backend/src/SmartInvest.API/Program.cs
-git commit -m "feat: seed ExecutiveAgency and Contractor roles at startup"
-```
-
----
-
 ## Self-Review Notes
+
+**Pre-flight fix (applied before dispatch):** role seeding for `ExecutiveAgency`/`Contractor` was originally a separate Task 11 dispatched last. Moved into Task 1 (Step 7) instead, because Task 5/6's `UserManager.AddToRoleAsync` calls fail at runtime if the role isn't already in `AspNetRoles` — dispatching it last would have broken every task from 5 onward until the very end.
 
 **Spec coverage:**
 - إسناد مشروع فرعي لجهة تنفيذية واحدة → Task 8.
