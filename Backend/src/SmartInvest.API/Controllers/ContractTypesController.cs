@@ -8,7 +8,7 @@ namespace SmartInvest.API.Controllers;
 
 [ApiController]
 [Route("api/contract-types")]
-[Authorize(Roles = Roles.PlanningStaff)]
+[Authorize]
 public class ContractTypesController : ControllerBase
 {
     private readonly IContractTypeService _contractTypeService;
@@ -19,7 +19,6 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<IReadOnlyList<ContractTypeDto>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.GetAllAsync(cancellationToken);
@@ -27,6 +26,7 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<ContractTypeDto>> Create(CreateContractTypeDto dto, CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.CreateAsync(dto, cancellationToken);
@@ -34,6 +34,7 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<ContractTypeDto>> Update(int id, UpdateContractTypeDto dto, CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.UpdateAsync(id, dto, cancellationToken);

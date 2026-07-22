@@ -1885,7 +1885,7 @@ namespace SmartInvest.API.Controllers;
 
 [ApiController]
 [Route("api/contract-types")]
-[Authorize(Roles = Roles.PlanningStaff)]
+[Authorize]
 public class ContractTypesController : ControllerBase
 {
     private readonly IContractTypeService _contractTypeService;
@@ -1896,7 +1896,6 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<IReadOnlyList<ContractTypeDto>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.GetAllAsync(cancellationToken);
@@ -1904,6 +1903,7 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<ContractTypeDto>> Create(CreateContractTypeDto dto, CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.CreateAsync(dto, cancellationToken);
@@ -1911,6 +1911,7 @@ public class ContractTypesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<ContractTypeDto>> Update(int id, UpdateContractTypeDto dto, CancellationToken cancellationToken)
     {
         var result = await _contractTypeService.UpdateAsync(id, dto, cancellationToken);
@@ -1927,7 +1928,7 @@ public class ContractTypesController : ControllerBase
 }
 ```
 
-Note: `GetAll` is opened to any authenticated role (`[Authorize]` override) since agencies and contractors also need this list to display/select contract types; create/update stay `PlanningStaff` (Manager+Employee) per your explicit answer; delete stays Manager-only.
+**Post-hoc correction (found during Task 10, applied retroactively):** the original code above put `[Authorize(Roles = Roles.PlanningStaff)]` on the class and a bare `[Authorize]` override on `GetAll`, intending to widen `GetAll` to any authenticated role. ASP.NET Core does not compose `[Authorize]` attributes that way — class-level and method-level attributes are ANDed (all must pass), never overridden, so a role NOT in the class-level list can never satisfy both regardless of what the method-level attribute says. `GetAll` was therefore silently still `PlanningStaff`-only despite the override's intent. The class-level attribute is now bare `[Authorize]` (require authentication only), with `Create`/`Update` individually carrying `[Authorize(Roles = Roles.PlanningStaff)]` — narrowing (subset of an unrestricted class-level gate) works fine with AND-composition; only widening beyond the class-level set was ever broken. `Delete` was already narrowing correctly and needed no change.
 
 - [ ] **Step 7: Register in DI**
 
