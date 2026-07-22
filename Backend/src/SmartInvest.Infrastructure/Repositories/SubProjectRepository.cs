@@ -18,6 +18,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
             .Include(x => x.Markaz).ThenInclude(m => m.Governorate)
             .Include(x => x.Priority)
             .Include(x => x.Status)
+            .Include(x => x.ExecutiveAgency)
             .Include(x => x.ProjectSpecifications)
             .FirstOrDefaultAsync(x => x.SubProjectId == id, cancellationToken);
     }
@@ -39,6 +40,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
             .Include(x => x.Markaz)
             .Include(x => x.Priority)
             .Include(x => x.Status)
+            .Include(x => x.ExecutiveAgency)
             .AsQueryable();
 
         if (mainProjectId.HasValue)

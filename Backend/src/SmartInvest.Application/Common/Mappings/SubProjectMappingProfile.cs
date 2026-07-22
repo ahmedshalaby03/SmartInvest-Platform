@@ -44,7 +44,13 @@ public class SubProjectMappingProfile : Profile
                 opt => opt.MapFrom(src => src.StatusId))
             .ForMember(
                 dest => dest.StatusName,
-                opt => opt.MapFrom(src => src.Status.StatusName));
+                opt => opt.MapFrom(src => src.Status.StatusName))
+            .ForMember(
+                dest => dest.ExecutiveAgencyId,
+                opt => opt.MapFrom(src => src.ExecutiveAgencyId))
+            .ForMember(
+                dest => dest.ExecutiveAgencyName,
+                opt => opt.MapFrom(src => src.ExecutiveAgency != null ? src.ExecutiveAgency.AgencyName : null));
 
         CreateMap<SubProject, SubProjectDetailDto>()
             .ForMember(
@@ -92,6 +98,12 @@ public class SubProjectMappingProfile : Profile
             .ForMember(
                 dest => dest.StatusName,
                 opt => opt.MapFrom(src => src.Status.StatusName))
+            .ForMember(
+                dest => dest.ExecutiveAgencyId,
+                opt => opt.MapFrom(src => src.ExecutiveAgencyId))
+            .ForMember(
+                dest => dest.ExecutiveAgencyName,
+                opt => opt.MapFrom(src => src.ExecutiveAgency != null ? src.ExecutiveAgency.AgencyName : null))
             .ForMember(
                 dest => dest.Specifications,
                 opt => opt.MapFrom(src => src.ProjectSpecifications));

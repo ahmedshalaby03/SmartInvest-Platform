@@ -15,6 +15,8 @@ public class SubProjectService : ISubProjectService
     private readonly IGenericRepository<Markaz> _markazRepository;
     private readonly IGenericRepository<ProjectPriority> _priorityRepository;
     private readonly IGenericRepository<ProjectStatus> _statusRepository;
+    private readonly IGenericRepository<ExecutiveAgency> _agencyRepository;
+    private readonly IGenericRepository<ProjectAssignment> _assignmentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
@@ -24,6 +26,8 @@ public class SubProjectService : ISubProjectService
         IGenericRepository<Markaz> markazRepository,
         IGenericRepository<ProjectPriority> priorityRepository,
         IGenericRepository<ProjectStatus> statusRepository,
+        IGenericRepository<ExecutiveAgency> agencyRepository,
+        IGenericRepository<ProjectAssignment> assignmentRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
@@ -32,6 +36,8 @@ public class SubProjectService : ISubProjectService
         _markazRepository = markazRepository;
         _priorityRepository = priorityRepository;
         _statusRepository = statusRepository;
+        _agencyRepository = agencyRepository;
+        _assignmentRepository = assignmentRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
@@ -149,5 +155,38 @@ public class SubProjectService : ISubProjectService
         {
             throw new NotFoundException("حالة المشروع المحددة غير موجودة");
         }
+    }
+
+    public async Task<SubProjectDetailDto> AssignExecutiveAgencyAsync(int id, int executiveAgencyId, CancellationToken cancellationToken = default)
+    {
+        var subProject = await _subProjectRepository.GetByIdAsync(id, cancellationToken);
+        if (subProject == null)
+        {
+            throw new NotFoundException($"المشروع الفرعي رقم {id} غير موجود");
+        }
+
+        var agency = await _agencyRepository.GetByIdAsync(executiveAgencyId, cancellationToken);
+        if (agency == null)
+        {
+            throw new NotFoundException("الجهة التنفيذية المحددة غير موجودة");
+        }
+
+        var isAgencyChanging = subProject.ExecutiveAgencyId.HasValue && subProject.ExecutiveAgencyId != executiveAgencyId;
+        if (isAgencyChanging)
+        {
+            var existingAssignments = await _assignmentRepository.FindAsync(x => x.SubProjectId == id, cancellationToken);
+            foreach (var assignment in existingAssignments)
+            {
+                assignment.IsLocked = true;
+                _assignmentRepository.Update(assignment);
+            }
+        }
+
+        subProject.ExecutiveAgencyId = executiveAgencyId;
+        _subProjectRepository.Update(subProject);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var updated = await _subProjectRepository.GetWithDetailsAsync(id, cancellationToken);
+        return _mapper.Map<SubProjectDetailDto>(updated);
     }
 }

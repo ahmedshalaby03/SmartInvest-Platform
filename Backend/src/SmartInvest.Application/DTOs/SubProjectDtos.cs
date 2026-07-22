@@ -16,6 +16,8 @@ public class SubProjectListItemDto
     public string PriorityName { get; set; } = string.Empty;
     public int StatusId { get; set; }
     public string StatusName { get; set; } = string.Empty;
+    public int? ExecutiveAgencyId { get; set; }
+    public string? ExecutiveAgencyName { get; set; }
     public decimal BankFunding { get; set; }
     public decimal SelfFunding { get; set; }
     public decimal TotalCost { get; set; }
@@ -48,6 +50,8 @@ public class SubProjectDetailDto
     public string PriorityName { get; set; } = string.Empty;
     public int StatusId { get; set; }
     public string StatusName { get; set; } = string.Empty;
+    public int? ExecutiveAgencyId { get; set; }
+    public string? ExecutiveAgencyName { get; set; }
     public decimal BankFunding { get; set; }
     public decimal SelfFunding { get; set; }
     public decimal TotalCost { get; set; }
@@ -97,4 +101,9 @@ public class UpdateSubProjectDto
     public string? EconomicImpact { get; set; }
     public string? EnvironmentalImpact { get; set; }
     public string? GreenInvestmentLink { get; set; }
+}
+
+public class AssignExecutiveAgencyDto
+{
+    public int ExecutiveAgencyId { get; set; }
 }

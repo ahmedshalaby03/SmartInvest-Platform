@@ -63,6 +63,14 @@ public class SubProjectsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{id:int}/executive-agency")]
+    [Authorize(Roles = Roles.PlanningStaff)]
+    public async Task<ActionResult<SubProjectDetailDto>> AssignExecutiveAgency(int id, AssignExecutiveAgencyDto dto, CancellationToken cancellationToken)
+    {
+        var result = await _subProjectService.AssignExecutiveAgencyAsync(id, dto.ExecutiveAgencyId, cancellationToken);
+        return Ok(result);
+    }
+
     [HttpDelete("{id:int}")]
     [Authorize(Roles = Roles.PlanningManager)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
