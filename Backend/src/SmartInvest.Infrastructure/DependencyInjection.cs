@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IMainProjectRepository, MainProjectRepository>();
         services.AddScoped<ISubProjectRepository, SubProjectRepository>();
+        services.AddScoped<IProjectAssignmentRepository, ProjectAssignmentRepository>();
         services.AddScoped<IMainProjectService, MainProjectService>();
         services.AddScoped<ISubProjectService, SubProjectService>();
         services.AddScoped<IProjectSpecificationService, ProjectSpecificationService>();
@@ -47,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IExecutiveAgencyService, ExecutiveAgencyService>();
         services.AddScoped<IContractorService, ContractorService>();
         services.AddScoped<IContractTypeService, ContractTypeService>();
+        services.AddScoped<IProjectAssignmentService, ProjectAssignmentService>();
 
         return services;
     }
