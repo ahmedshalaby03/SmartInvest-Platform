@@ -71,7 +71,7 @@ public class ProjectAssignmentService : IProjectAssignmentService
         EnsureAgencyOwnership(subProject);
 
         var assignment = await GetAssignmentOrThrowAsync(subProjectId, id, cancellationToken);
-        if (assignment.IsLocked)
+        if (assignment.IsLocked && _currentUser.Role != Roles.PlanningManager)
         {
             throw new BusinessRuleException("هذا التعيين مقفول ولا يمكن تعديله (تم تغيير الجهة التنفيذية للمشروع)");
         }

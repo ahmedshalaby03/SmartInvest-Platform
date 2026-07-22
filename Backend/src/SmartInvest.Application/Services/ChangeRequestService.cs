@@ -161,7 +161,7 @@ public class ChangeRequestService : IChangeRequestService
             throw new NotFoundException($"التعيين رقم {assignmentId} غير موجود");
         }
 
-        if (assignment.IsLocked)
+        if (assignment.IsLocked && _currentUser.Role != Roles.PlanningManager)
         {
             throw new BusinessRuleException("هذا التعيين مقفول ولا يمكن تعديله (تم تغيير الجهة التنفيذية للمشروع)");
         }
