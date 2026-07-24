@@ -323,8 +323,15 @@ export class Projects {
     const end = new Date(start);
     end.setFullYear(end.getFullYear() + 1);
     end.setDate(end.getDate() - 1);
-    const toIso = (d: Date) => d.toISOString().slice(0, 10);
-    return { name: `${start.getFullYear()}/${end.getFullYear()}`, startDate: toIso(start), endDate: toIso(end) };
+    return {
+      name: `${start.getFullYear()}/${end.getFullYear()}`,
+      startDate: this.toLocalIsoDate(start),
+      endDate: this.toLocalIsoDate(end),
+    };
+  }
+
+  private toLocalIsoDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   protected openAddYear(): void {
@@ -406,7 +413,7 @@ export class Projects {
   // ===== طباعة الخطة المعتمدة =====
   protected openApprovedPrint(): void {
     if (!this.selectedYearId()) return;
-    this.approvedDate.set(new Date().toISOString().slice(0, 10));
+    this.approvedDate.set(this.toLocalIsoDate(new Date()));
     this.showApprovedDateForm.set(true);
   }
 
