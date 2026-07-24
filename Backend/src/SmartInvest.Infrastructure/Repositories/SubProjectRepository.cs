@@ -30,6 +30,7 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
         int? markazId,
         int? priorityId,
         int? statusId,
+        int? financialYearId,
         string? searchTerm,
         int page,
         int pageSize,
@@ -71,6 +72,11 @@ public class SubProjectRepository : GenericRepository<SubProject>, ISubProjectRe
         if (statusId.HasValue)
         {
             query = query.Where(x => x.StatusId == statusId);
+        }
+
+        if (financialYearId.HasValue)
+        {
+            query = query.Where(x => x.FinancialYears.Any(y => y.FinancialYearId == financialYearId));
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

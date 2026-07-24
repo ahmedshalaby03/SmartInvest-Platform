@@ -42,10 +42,10 @@ public class SubProjectService : ISubProjectService
         _mapper = mapper;
     }
 
-    public async Task<PagedResultDto<SubProjectListItemDto>> SearchAsync(int? mainProjectId, int? mainProgramId, int? subProgramId, int? markazId, int? priorityId, int? statusId, string? searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResultDto<SubProjectListItemDto>> SearchAsync(int? mainProjectId, int? mainProgramId, int? subProgramId, int? markazId, int? priorityId, int? statusId, int? financialYearId, string? searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var result = await _subProjectRepository.SearchAsync(mainProjectId, mainProgramId, subProgramId, markazId,
-            priorityId, statusId, searchTerm, page, pageSize, cancellationToken);
+            priorityId, statusId, financialYearId, searchTerm, page, pageSize, cancellationToken);
 
         var pagedResult = new PagedResultDto<SubProjectListItemDto>
         {
