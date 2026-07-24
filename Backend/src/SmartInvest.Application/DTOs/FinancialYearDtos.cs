@@ -7,6 +7,7 @@ public class FinancialYearDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsClosed { get; set; }
+    public decimal? Budget { get; set; }
 }
 
 public class CreateFinancialYearDto
@@ -14,6 +15,7 @@ public class CreateFinancialYearDto
     public string Name { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public decimal? Budget { get; set; }
 }
 
 public class UpdateFinancialYearDto
@@ -22,4 +24,5 @@ public class UpdateFinancialYearDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsClosed { get; set; }
+    public decimal? Budget { get; set; }
 }

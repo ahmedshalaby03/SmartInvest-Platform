@@ -49,6 +49,7 @@ public class FinancialYearService : IFinancialYearService
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsClosed = false,
+            Budget = dto.Budget,
         };
 
         await _financialYearRepository.AddAsync(year, cancellationToken);
@@ -65,6 +66,7 @@ public class FinancialYearService : IFinancialYearService
         year.StartDate = dto.StartDate;
         year.EndDate = dto.EndDate;
         year.IsClosed = dto.IsClosed;
+        year.Budget = dto.Budget;
 
         _financialYearRepository.Update(year);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
