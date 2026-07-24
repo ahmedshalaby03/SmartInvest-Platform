@@ -12,7 +12,7 @@ using SmartInvest.Infrastructure.Data;
 namespace SmartInvest.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260724224700_AddFinancialYearBudget")]
+    [Migration("20260724230954_AddFinancialYearBudget")]
     partial class AddFinancialYearBudget
     {
         /// <inheritdoc />
