@@ -10,6 +10,7 @@ import {
   PagedResult,
   SubProjectListItem,
   SubProjectDetail,
+  SubProjectFinancialYear,
   SubProjectSearchParams,
   UpdateMainProject,
   UpdateSubProject,
@@ -49,7 +50,7 @@ export class ProjectsService {
 
     const optional: (keyof SubProjectSearchParams)[] = [
       'mainProjectId', 'mainProgramId', 'subProgramId', 'markazId',
-      'priorityId', 'statusId', 'searchTerm',
+      'priorityId', 'statusId', 'financialYearId', 'searchTerm',
     ];
     for (const key of optional) {
       const value = params[key];
@@ -77,5 +78,21 @@ export class ProjectsService {
 
   deleteSubProject(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/subprojects/${id}`);
+  }
+
+  // ===== السنوات المالية للمشروع الفرعي =====
+  getSubProjectFinancialYears(subProjectId: number): Observable<SubProjectFinancialYear[]> {
+    return this.http.get<SubProjectFinancialYear[]>(`${this.base}/subprojects/${subProjectId}/financial-years`);
+  }
+
+  linkFinancialYear(subProjectId: number, financialYearId: number): Observable<SubProjectFinancialYear> {
+    return this.http.post<SubProjectFinancialYear>(
+      `${this.base}/subprojects/${subProjectId}/financial-years`,
+      { financialYearId },
+    );
+  }
+
+  unlinkFinancialYear(subProjectId: number, financialYearId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/subprojects/${subProjectId}/financial-years/${financialYearId}`);
   }
 }

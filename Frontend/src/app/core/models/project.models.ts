@@ -156,7 +156,78 @@ export interface SubProjectSearchParams {
   markazId?: number;
   priorityId?: number;
   statusId?: number;
+  financialYearId?: number;
   searchTerm?: string;
   page: number;
   pageSize: number;
+}
+
+export interface FinancialYear {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isClosed: boolean;
+  budget: number | null;
+}
+
+export interface CreateFinancialYear {
+  name: string;
+  startDate: string;
+  endDate: string;
+  budget?: number | null;
+}
+
+export interface UpdateFinancialYear {
+  name: string;
+  startDate: string;
+  endDate: string;
+  isClosed: boolean;
+  budget?: number | null;
+}
+
+export interface SubProjectFinancialYear {
+  id: number;
+  financialYearId: number;
+  financialYearName: string;
+  startDate: string;
+  endDate: string;
+  isClosed: boolean;
+}
+
+export interface Plan {
+  id: number;
+  planName: string;
+  planStatus: string;
+  suggestionDate: string;
+  approvalDate: string | null;
+  financialYearId: number;
+  financialYearName: string;
+}
+
+export interface PlanSuggestedProject {
+  subProjectId: number;
+  subProjectName: string;
+  subProjectCode: string | null;
+  mainProjectName: string;
+  bankFunding: number;
+  selfFunding: number;
+  totalCost: number;
+}
+
+export interface PlanDetail extends Plan {
+  suggestedProjects: PlanSuggestedProject[];
+}
+
+export interface CreatePlan {
+  planName: string;
+  financialYearId: number;
+}
+
+export interface UpdatePlan {
+  planName: string;
+}
+
+export interface ApprovePlan {
+  approvalDate: string;
 }
