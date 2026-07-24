@@ -9,7 +9,21 @@
 
   <!-- شريط الأدوات العلوي: السنة + فلتر الحالة + الإضافة -->
   <div class="toolbar">
-    <select class="mini"><option>2026/2027</option></select>
+    <select class="mini" [ngModel]="selectedYearId()" (ngModelChange)="onYearChange($event)">
+      @for (y of sortedYears(); track y.id) { <option [ngValue]="y.id">{{ y.name }}</option> }
+    </select>
+    <button class="si-btn" (click)="openAddYear()">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+      إضافة سنة مالية
+    </button>
+    <button class="si-btn" [disabled]="!selectedYearId() || printing()" (click)="printSuggested()">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" /></svg>
+      طباعة الخطة المقترحة
+    </button>
+    <button class="si-btn" [disabled]="!selectedYearId() || printing()" (click)="openApprovedPrint()">
+      <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" /></svg>
+      طباعة الخطة المعتمدة
+    </button>
     <div class="seg">
       <button [class.on]="approvalFilter() === 'all'" (click)="approvalFilter.set('all')">كل المشروعات</button>
       <button [class.on]="approvalFilter() === 'approved'" (click)="approvalFilter.set('approved')">معتمدة</button>
@@ -211,4 +225,51 @@
   <!-- Modals -->
   <app-main-project-form [open]="showMainForm()" [edit]="mainEdit()" (close)="closeModals()" (saved)="onSaved()" />
   <app-sub-project-form [open]="showSubForm()" [edit]="subEdit()" [locked]="subLocked()" [mains]="mains()" (close)="closeModals()" (saved)="onSaved()" />
+
+  <!-- نافذة إضافة سنة مالية -->
+  @if (showAddYearForm()) {
+    <div class="si-overlay" (click)="closeAddYear()">
+      <div class="si-modal" (click)="$event.stopPropagation()" style="width:min(440px,100%)">
+        <div class="si-modal-head">
+          <div class="grow"><h3>إضافة سنة مالية جديدة</h3><p>{{ computeNextYear().name }} ({{ computeNextYear().startDate }} — {{ computeNextYear().endDate }})</p></div>
+          <button class="si-x" (click)="closeAddYear()" aria-label="إغلاق">×</button>
+        </div>
+        <div class="si-modal-body">
+          @if (addYearError()) { <div class="si-err">{{ addYearError() }}</div> }
+          <div class="si-fld">
+            <label>الموازنة (اختياري)</label>
+            <input type="number" [ngModel]="newYearBudget()" (ngModelChange)="newYearBudget.set($event)" placeholder="0" />
+          </div>
+        </div>
+        <div class="si-modal-foot">
+          <button class="si-btn primary" [disabled]="savingYear()" (click)="confirmAddYear()">
+            @if (savingYear()) { جاري الإضافة… } @else { إضافة السنة }
+          </button>
+          <button class="si-btn" (click)="closeAddYear()">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- نافذة تاريخ اعتماد الخطة -->
+  @if (showApprovedDateForm()) {
+    <div class="si-overlay" (click)="closeApprovedPrint()">
+      <div class="si-modal" (click)="$event.stopPropagation()" style="width:min(440px,100%)">
+        <div class="si-modal-head">
+          <div class="grow"><h3>تاريخ اعتماد الخطة</h3><p>هذا التاريخ سيُسجَّل كتاريخ اعتماد الخطة المطبوعة</p></div>
+          <button class="si-x" (click)="closeApprovedPrint()" aria-label="إغلاق">×</button>
+        </div>
+        <div class="si-modal-body">
+          <div class="si-fld">
+            <label>تاريخ الاعتماد <span class="req">*</span></label>
+            <input type="date" [ngModel]="approvedDate()" (ngModelChange)="approvedDate.set($event)" />
+          </div>
+        </div>
+        <div class="si-modal-foot">
+          <button class="si-btn primary" [disabled]="!approvedDate()" (click)="confirmApprovedPrint()">طباعة</button>
+          <button class="si-btn" (click)="closeApprovedPrint()">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

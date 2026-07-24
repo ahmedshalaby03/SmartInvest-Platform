@@ -1,12 +1,15 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ProjectsService } from '../../core/services/projects.service';
 import { LookupsService } from '../../core/services/lookups.service';
 import { AuthService } from '../../core/services/auth.service';
+import { FinancialYearsService } from '../../core/services/financial-years.service';
+import { PlansService } from '../../core/services/plans.service';
 import {
   EXECUTING_AGENCIES,
+  FinancialYear,
   Lookup,
   MainProjectListItem,
   MarkazLookup,
@@ -34,6 +37,9 @@ export class Projects {
   private readonly projectsService = inject(ProjectsService);
   private readonly lookups = inject(LookupsService);
   private readonly auth = inject(AuthService);
+  private readonly financialYearsService = inject(FinancialYearsService);
+  private readonly plansService = inject(PlansService);
+  private readonly router = inject(Router);
 
   protected readonly isManager = this.auth.isManager;
   protected readonly agencies = EXECUTING_AGENCIES;
@@ -42,6 +48,22 @@ export class Projects {
   protected readonly error = signal<string | null>(null);
   protected readonly mains = signal<MainProjectListItem[]>([]);
   protected readonly subs = signal<SubProjectListItem[]>([]);
+
+  // ===== السنة المالية =====
+  protected readonly financialYears = signal<FinancialYear[]>([]);
+  protected readonly selectedYearId = signal<number | null>(null);
+  protected readonly sortedYears = computed(() =>
+    [...this.financialYears()].sort((a, b) => b.startDate.localeCompare(a.startDate)),
+  );
+  protected readonly printing = signal(false);
+
+  protected readonly showAddYearForm = signal(false);
+  protected readonly newYearBudget = signal<number | null>(null);
+  protected readonly addYearError = signal<string | null>(null);
+  protected readonly savingYear = signal(false);
+
+  protected readonly showApprovedDateForm = signal(false);
+  protected readonly approvedDate = signal('');
 
   // ابحث + فلاتر
   protected readonly searchTerm = signal('');
@@ -187,7 +209,7 @@ export class Projects {
   protected readonly addMenuOpen = signal(false);
 
   constructor() {
-    this.load();
+    this.loadFinancialYears();
     this.loadLookups();
     effect(() => {
       this.searchTerm();
@@ -203,7 +225,11 @@ export class Projects {
     this.error.set(null);
     forkJoin({
       mains: this.projectsService.getMainProjects(),
-      subs: this.projectsService.searchSubProjects({ page: 1, pageSize: 1000 }),
+      subs: this.projectsService.searchSubProjects({
+        page: 1,
+        pageSize: 1000,
+        financialYearId: this.selectedYearId() ?? undefined,
+      }),
     }).subscribe({
       next: ({ mains, subs }) => {
         this.mains.set(mains);
@@ -215,6 +241,27 @@ export class Projects {
         this.loading.set(false);
       },
     });
+  }
+
+  private loadFinancialYears(): void {
+    this.financialYearsService.getAll().subscribe({
+      next: (years) => {
+        this.financialYears.set(years);
+        const sorted = [...years].sort((a, b) => b.startDate.localeCompare(a.startDate));
+        if (this.selectedYearId() == null && sorted.length > 0) {
+          this.selectedYearId.set(sorted[0].id);
+        }
+        this.load();
+      },
+      error: () => {
+        this.load();
+      },
+    });
+  }
+
+  protected onYearChange(id: number): void {
+    this.selectedYearId.set(id);
+    this.load();
   }
 
   private loadLookups(): void {
@@ -261,5 +308,158 @@ export class Projects {
       next: () => this.load(),
       error: (err) => alert(err?.error?.message ?? 'تعذّر حذف المشروع الفرعي'),
     });
+  }
+
+  // ===== إضافة سنة مالية =====
+  protected computeNextYear(): { name: string; startDate: string; endDate: string } {
+    const latest = this.sortedYears()[0];
+    let start: Date;
+    if (latest) {
+      start = new Date(latest.endDate);
+      start.setDate(start.getDate() + 1);
+    } else {
+      start = new Date();
+    }
+    const end = new Date(start);
+    end.setFullYear(end.getFullYear() + 1);
+    end.setDate(end.getDate() - 1);
+    const toIso = (d: Date) => d.toISOString().slice(0, 10);
+    return { name: `${start.getFullYear()}/${end.getFullYear()}`, startDate: toIso(start), endDate: toIso(end) };
+  }
+
+  protected openAddYear(): void {
+    this.newYearBudget.set(null);
+    this.addYearError.set(null);
+    this.showAddYearForm.set(true);
+  }
+
+  protected closeAddYear(): void {
+    this.showAddYearForm.set(false);
+  }
+
+  protected confirmAddYear(): void {
+    if (this.savingYear()) return;
+    const next = this.computeNextYear();
+    this.savingYear.set(true);
+    this.addYearError.set(null);
+    this.financialYearsService
+      .create({ name: next.name, startDate: next.startDate, endDate: next.endDate, budget: this.newYearBudget() })
+      .subscribe({
+        next: (year) => {
+          this.savingYear.set(false);
+          this.showAddYearForm.set(false);
+          this.financialYears.update((list) => [...list, year]);
+          this.selectedYearId.set(year.id);
+          this.load();
+        },
+        error: (err) => {
+          this.savingYear.set(false);
+          this.addYearError.set(err?.error?.message ?? 'تعذّر إضافة السنة المالية');
+        },
+      });
+  }
+
+  // ===== طباعة الخطة المقترحة =====
+  protected printSuggested(): void {
+    const yearId = this.selectedYearId();
+    if (!yearId || this.printing()) return;
+    const year = this.financialYears().find((y) => y.id === yearId);
+    if (!year) return;
+
+    this.printing.set(true);
+    this.projectsService.searchSubProjects({ financialYearId: yearId, page: 1, pageSize: 5000 }).subscribe({
+      next: (result) => {
+        this.plansService.create({ planName: `الخطة المقترحة - ${year.name}`, financialYearId: yearId }).subscribe({
+          next: (plan) => this.addAllSuggested(plan.id, result.items.map((s) => s.id)),
+          error: () => {
+            this.printing.set(false);
+            alert('تعذّر إنشاء الخطة');
+          },
+        });
+      },
+      error: () => {
+        this.printing.set(false);
+        alert('تعذّر تحميل مشروعات السنة المالية');
+      },
+    });
+  }
+
+  private addAllSuggested(planId: number, subProjectIds: number[]): void {
+    if (subProjectIds.length === 0) {
+      this.printing.set(false);
+      this.router.navigate(['/app/plans', planId]);
+      return;
+    }
+    const calls = subProjectIds.map((id) => this.plansService.addSuggestedProject(planId, id));
+    forkJoin(calls).subscribe({
+      next: () => {
+        this.printing.set(false);
+        this.router.navigate(['/app/plans', planId]);
+      },
+      error: () => {
+        this.printing.set(false);
+        this.router.navigate(['/app/plans', planId]);
+      },
+    });
+  }
+
+  // ===== طباعة الخطة المعتمدة =====
+  protected openApprovedPrint(): void {
+    if (!this.selectedYearId()) return;
+    this.approvedDate.set(new Date().toISOString().slice(0, 10));
+    this.showApprovedDateForm.set(true);
+  }
+
+  protected closeApprovedPrint(): void {
+    this.showApprovedDateForm.set(false);
+  }
+
+  protected confirmApprovedPrint(): void {
+    const yearId = this.selectedYearId();
+    const date = this.approvedDate();
+    if (!yearId || !date || this.printing()) return;
+    const year = this.financialYears().find((y) => y.id === yearId);
+    if (!year) return;
+
+    this.showApprovedDateForm.set(false);
+    this.printing.set(true);
+    this.projectsService.searchSubProjects({ financialYearId: yearId, page: 1, pageSize: 5000 }).subscribe({
+      next: (result) => {
+        const approvedIds = result.items.filter((s) => !!s.code).map((s) => s.id);
+        this.plansService.create({ planName: `الخطة المعتمدة - ${year.name}`, financialYearId: yearId }).subscribe({
+          next: (plan) => this.addAllThenApprove(plan.id, approvedIds, date),
+          error: () => {
+            this.printing.set(false);
+            alert('تعذّر إنشاء الخطة');
+          },
+        });
+      },
+      error: () => {
+        this.printing.set(false);
+        alert('تعذّر تحميل مشروعات السنة المالية');
+      },
+    });
+  }
+
+  private addAllThenApprove(planId: number, subProjectIds: number[], approvalDate: string): void {
+    const afterAdd = () => {
+      this.plansService.approve(planId, { approvalDate }).subscribe({
+        next: () => {
+          this.printing.set(false);
+          this.router.navigate(['/app/plans', planId]);
+        },
+        error: () => {
+          this.printing.set(false);
+          this.router.navigate(['/app/plans', planId]);
+        },
+      });
+    };
+
+    if (subProjectIds.length === 0) {
+      afterAdd();
+      return;
+    }
+    const calls = subProjectIds.map((id) => this.plansService.addSuggestedProject(planId, id));
+    forkJoin(calls).subscribe({ next: afterAdd, error: afterAdd });
   }
 }
