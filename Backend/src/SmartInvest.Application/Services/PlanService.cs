@@ -138,7 +138,7 @@ public class PlanService : IPlanService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<PlanDto> ApproveAsync(int planId, CancellationToken cancellationToken = default)
+    public async Task<PlanDto> ApproveAsync(int planId, DateTime approvalDate, CancellationToken cancellationToken = default)
     {
         var plan = await GetOrThrowAsync(planId, cancellationToken);
 
@@ -147,7 +147,7 @@ public class PlanService : IPlanService
             throw new BusinessRuleException("تم اعتماد هذه الخطة بالفعل");
         }
 
-        plan.ApprovalDate = DateTime.UtcNow;
+        plan.ApprovalDate = approvalDate;
         plan.PlanStatus = "معتمدة";
 
         _planRepository.Update(plan);

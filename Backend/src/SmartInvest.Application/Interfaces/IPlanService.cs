@@ -18,5 +18,5 @@ public interface IPlanService
 
     Task RemoveSuggestedProjectAsync(int planId, int subProjectId, CancellationToken cancellationToken = default);
 
-    Task<PlanDto> ApproveAsync(int planId, CancellationToken cancellationToken = default);
+    Task<PlanDto> ApproveAsync(int planId, DateTime approvalDate, CancellationToken cancellationToken = default);
 }

@@ -74,9 +74,9 @@ public class PlansController : ControllerBase
 
     [HttpPut("{id:int}/approve")]
     [Authorize(Roles = Roles.PlanningManager)]
-    public async Task<ActionResult<PlanDto>> Approve(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<PlanDto>> Approve(int id, ApprovePlanDto dto, CancellationToken cancellationToken)
     {
-        var result = await _planService.ApproveAsync(id, cancellationToken);
+        var result = await _planService.ApproveAsync(id, dto.ApprovalDate, cancellationToken);
         return Ok(result);
     }
 }

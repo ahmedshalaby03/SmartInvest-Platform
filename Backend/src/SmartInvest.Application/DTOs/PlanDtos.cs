@@ -49,3 +49,8 @@ public class AddSuggestedProjectDto
 {
     public int SubProjectId { get; set; }
 }
+
+public class ApprovePlanDto
+{
+    public DateTime ApprovalDate { get; set; }
+}
