@@ -224,7 +224,7 @@
 
   <!-- Modals -->
   <app-main-project-form [open]="showMainForm()" [edit]="mainEdit()" (close)="closeModals()" (saved)="onSaved()" />
-  <app-sub-project-form [open]="showSubForm()" [edit]="subEdit()" [locked]="subLocked()" [mains]="mains()" (close)="closeModals()" (saved)="onSaved()" />
+  <app-sub-project-form [open]="showSubForm()" [edit]="subEdit()" [locked]="subLocked()" [mains]="mains()" [defaultYearId]="selectedYearId()" (close)="closeModals()" (saved)="onSaved()" />
 
   <!-- نافذة إضافة سنة مالية -->
   @if (showAddYearForm()) {

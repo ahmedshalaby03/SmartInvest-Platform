@@ -3,7 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ProjectsService } from '../../core/services/projects.service';
 import { LookupsService } from '../../core/services/lookups.service';
+import { FinancialYearsService } from '../../core/services/financial-years.service';
 import {
+  FinancialYear,
   Lookup,
   MainProjectListItem,
   MarkazLookup,
@@ -114,6 +116,18 @@ export interface LockedParent {
                 <textarea [ngModel]="description()" (ngModelChange)="description.set($event)" placeholder="أي ملاحظات إضافية…"></textarea>
               </div>
             </div>
+
+            <div class="si-step"><span class="n">3</span><h4>السنوات المالية</h4></div>
+            <div class="si-years">
+              @for (y of financialYears(); track y.id) {
+                <label class="si-year-chk">
+                  <input type="checkbox" [checked]="checkedYearIds().has(y.id)" (change)="toggleYear(y.id)" />
+                  {{ y.name }}
+                </label>
+              } @empty {
+                <p class="hint">لا توجد سنوات مالية بعد.</p>
+              }
+            </div>
           </div>
 
           <div class="si-modal-foot">
@@ -126,22 +140,28 @@ export interface LockedParent {
       </div>
     }
   `,
-  styles: [`.mini-sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}`],
+  styles: [`.mini-sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}.si-years{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}.si-year-chk{display:flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;background:var(--surface)}.si-years .hint{font-size:12px;color:var(--muted)}`],
 })
 export class SubProjectForm {
   private readonly projectsService = inject(ProjectsService);
   private readonly lookups = inject(LookupsService);
+  private readonly financialYearsService = inject(FinancialYearsService);
 
   readonly open = input(false);
   readonly edit = input<SubProjectListItem | null>(null);
   readonly locked = input<LockedParent | null>(null);
   readonly mains = input<MainProjectListItem[]>([]);
+  readonly defaultYearId = input<number | null>(null);
   readonly close = output<void>();
   readonly saved = output<void>();
 
   protected readonly priorities = signal<Lookup[]>([]);
   protected readonly statuses = signal<Lookup[]>([]);
   protected readonly markazList = signal<MarkazLookup[]>([]);
+
+  protected readonly financialYears = signal<FinancialYear[]>([]);
+  protected readonly checkedYearIds = signal<Set<number>>(new Set());
+  private originalYearIds = new Set<number>();
 
   protected readonly mainProjectId = signal<number | null>(null);
   protected readonly name = signal('');
@@ -197,11 +217,13 @@ export class SubProjectForm {
       priorities: this.lookups.getPriorities(),
       statuses: this.lookups.getStatuses(),
       markaz: this.lookups.getMarkaz(),
+      financialYears: this.financialYearsService.getAll(),
     }).subscribe({
-      next: ({ priorities, statuses, markaz }) => {
+      next: ({ priorities, statuses, markaz, financialYears }) => {
         this.priorities.set(priorities);
         this.statuses.set(statuses);
         this.markazList.set(markaz);
+        this.financialYears.set(financialYears);
         this.lookupsLoaded = true;
         done();
       },
@@ -235,6 +257,18 @@ export class SubProjectForm {
         },
         error: () => this.error.set('تعذّر تحميل بيانات المشروع الفرعي'),
       });
+
+      this.projectsService.getSubProjectFinancialYears(e.id).subscribe({
+        next: (links) => {
+          const ids = new Set(links.map((l) => l.financialYearId));
+          this.originalYearIds = ids;
+          this.checkedYearIds.set(new Set(ids));
+        },
+      });
+    } else {
+      this.originalYearIds = new Set<number>();
+      const defaultId = this.defaultYearId();
+      this.checkedYearIds.set(defaultId != null ? new Set([defaultId]) : new Set<number>());
     }
   }
 
@@ -249,6 +283,18 @@ export class SubProjectForm {
     this.bankFunding.set(0);
     this.selfFunding.set(0);
     this.description.set('');
+  }
+
+  protected toggleYear(id: number): void {
+    this.checkedYearIds.update((set) => {
+      const next = new Set(set);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
   protected submit(): void {
@@ -285,13 +331,40 @@ export class SubProjectForm {
       : this.projectsService.createSubProject({ ...base, mainProjectId: this.mainProjectId()! });
 
     req.subscribe({
+      next: (result) => {
+        const subProjectId = editing ? editing.id : result.id;
+        this.syncFinancialYears(subProjectId);
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.error.set(err?.error?.message ?? 'تعذّر حفظ المشروع الفرعي');
+      },
+    });
+  }
+
+  private syncFinancialYears(subProjectId: number): void {
+    const desired = this.checkedYearIds();
+    const toLink = [...desired].filter((id) => !this.originalYearIds.has(id));
+    const toUnlink = [...this.originalYearIds].filter((id) => !desired.has(id));
+    const calls = [
+      ...toLink.map((id) => this.projectsService.linkFinancialYear(subProjectId, id)),
+      ...toUnlink.map((id) => this.projectsService.unlinkFinancialYear(subProjectId, id)),
+    ];
+
+    if (calls.length === 0) {
+      this.saving.set(false);
+      this.saved.emit();
+      return;
+    }
+
+    forkJoin(calls).subscribe({
       next: () => {
         this.saving.set(false);
         this.saved.emit();
       },
       error: (err) => {
         this.saving.set(false);
-        this.error.set(err?.error?.message ?? 'تعذّر حفظ المشروع الفرعي');
+        this.error.set(err?.error?.message ?? 'تعذّر تحديث ربط السنوات المالية');
       },
     });
   }
