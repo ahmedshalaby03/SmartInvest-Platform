@@ -34,7 +34,7 @@ public class SubProjectFinancialYearsController : ControllerBase
     }
 
     [HttpDelete("{financialYearId:int}")]
-    [Authorize(Roles = Roles.PlanningManager)]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<IActionResult> Unlink(int subProjectId, int financialYearId, CancellationToken cancellationToken)
     {
         await _linkService.UnlinkAsync(subProjectId, financialYearId, cancellationToken);

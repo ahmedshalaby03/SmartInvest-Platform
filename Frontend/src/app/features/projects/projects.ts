@@ -405,6 +405,7 @@ export class Projects {
       },
       error: () => {
         this.printing.set(false);
+        alert('تعذّر إضافة بعض المشروعات للخطة، قد تكون الخطة المطبوعة غير مكتملة');
         this.router.navigate(['/app/plans', planId]);
       },
     });
@@ -449,7 +450,10 @@ export class Projects {
   }
 
   private addAllThenApprove(planId: number, subProjectIds: number[], approvalDate: string): void {
-    const afterAdd = () => {
+    const afterAdd = (addFailed: boolean) => {
+      if (addFailed) {
+        alert('تعذّر إضافة بعض المشروعات للخطة، قد تكون الخطة المطبوعة غير مكتملة');
+      }
       this.plansService.approve(planId, { approvalDate }).subscribe({
         next: () => {
           this.printing.set(false);
@@ -457,16 +461,17 @@ export class Projects {
         },
         error: () => {
           this.printing.set(false);
+          alert('تعذّر اعتماد الخطة، ستُطبع كخطة غير معتمدة');
           this.router.navigate(['/app/plans', planId]);
         },
       });
     };
 
     if (subProjectIds.length === 0) {
-      afterAdd();
+      afterAdd(false);
       return;
     }
     const calls = subProjectIds.map((id) => this.plansService.addSuggestedProject(planId, id));
-    forkJoin(calls).subscribe({ next: afterAdd, error: afterAdd });
+    forkJoin(calls).subscribe({ next: () => afterAdd(false), error: () => afterAdd(true) });
   }
 }

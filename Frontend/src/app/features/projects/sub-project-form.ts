@@ -264,6 +264,7 @@ export class SubProjectForm {
           this.originalYearIds = ids;
           this.checkedYearIds.set(new Set(ids));
         },
+        error: () => this.error.set('تعذّر تحميل السنوات المالية المرتبطة بهذا المشروع'),
       });
     } else {
       this.originalYearIds = new Set<number>();
@@ -283,6 +284,8 @@ export class SubProjectForm {
     this.bankFunding.set(0);
     this.selfFunding.set(0);
     this.description.set('');
+    this.checkedYearIds.set(new Set());
+    this.originalYearIds = new Set<number>();
   }
 
   protected toggleYear(id: number): void {
