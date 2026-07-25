@@ -1,0 +1,19 @@
+.print-page { padding: 24px 28px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; }
+.sheet-head { margin-bottom: 20px; border-bottom: 2px solid var(--green-700); padding-bottom: 14px; }
+.sheet-head h1 { font-size: 20px; margin-bottom: 8px; }
+.meta { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 13px; font-weight: 700; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 12px; border: 1px solid var(--line); font-size: 13px; text-align: start; }
+th { background: var(--surface-2); font-weight: 700; }
+tfoot td { font-weight: 800; background: var(--surface-2); }
+.empty { text-align: center; color: var(--muted); padding: 20px; }
+.state { padding: 40px; text-align: center; color: var(--muted); }
+.state.error { color: #b32a39; }
+
+@media print {
+  .no-print { display: none !important; }
+  .print-page { padding: 0; }
+  .sheet { box-shadow: none; border: none; }
+}

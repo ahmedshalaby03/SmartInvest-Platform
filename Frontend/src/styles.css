@@ -155,3 +155,9 @@ button { font-family: inherit; cursor: pointer; }
     transition-duration: .001ms !important;
   }
 }
+
+/* ===== طباعة: إخفاء هيكل التطبيق (الشريط الجانبي والترويسة) ===== */
+@media print {
+  .side, .topbar { display: none !important; }
+  .content { background: #fff !important; }
+}

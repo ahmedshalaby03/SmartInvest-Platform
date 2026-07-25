@@ -1,0 +1,61 @@
+<div class="print-page">
+  @if (loading()) {
+    <div class="state">جاري التحميل…</div>
+  } @else if (error() || !plan()) {
+    <div class="state error">{{ error() ?? 'الخطة غير موجودة' }}</div>
+  } @else {
+    <div class="toolbar no-print">
+      <a class="si-btn" routerLink="/app/projects">
+        <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 6l6 6-6 6" /></svg>
+        رجوع للمشروعات
+      </a>
+      <button class="si-btn primary" (click)="print()">
+        <svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" /></svg>
+        طباعة
+      </button>
+    </div>
+
+    <div class="sheet">
+      <header class="sheet-head">
+        <h1>{{ plan()!.planName }}</h1>
+        <div class="meta">
+          <span>السنة المالية: {{ plan()!.financialYearName }}</span>
+          <span>الحالة: {{ plan()!.planStatus }}</span>
+          <span>تاريخ الاقتراح: {{ plan()!.suggestionDate | date: 'yyyy/MM/dd' }}</span>
+          @if (plan()!.approvalDate) {
+            <span>تاريخ الاعتماد: {{ plan()!.approvalDate | date: 'yyyy/MM/dd' }}</span>
+          }
+        </div>
+      </header>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>المشروع الرئيسي</th><th>المشروع الفرعي</th><th>الكود</th><th>تمويل بنكي</th><th>تمويل ذاتي</th><th>الإجمالي</th></tr>
+        </thead>
+        <tbody>
+          @for (p of plan()!.suggestedProjects; track p.subProjectId; let i = $index) {
+            <tr>
+              <td>{{ i + 1 }}</td>
+              <td>{{ p.mainProjectName }}</td>
+              <td>{{ p.subProjectName }}</td>
+              <td>{{ p.subProjectCode ?? '—' }}</td>
+              <td class="tnum">{{ money(p.bankFunding) }}</td>
+              <td class="tnum">{{ money(p.selfFunding) }}</td>
+              <td class="tnum">{{ money(p.totalCost) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty">لا توجد مشروعات في هذه الخطة.</td></tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">الإجمالي</td>
+            <td class="tnum">{{ money(totalBank()) }}</td>
+            <td class="tnum">{{ money(totalSelf()) }}</td>
+            <td class="tnum">{{ money(totalCost()) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  }
+</div>

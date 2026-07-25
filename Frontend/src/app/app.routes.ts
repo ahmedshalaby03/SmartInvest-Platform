@@ -37,6 +37,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'plans/:id',
+        loadComponent: () =>
+          import('./features/plans/plan-print').then((m) => m.PlanPrint),
+      },
+      {
         path: 'users',
         canActivate: [roleGuard([Roles.PlanningManager])],
         loadComponent: () =>
