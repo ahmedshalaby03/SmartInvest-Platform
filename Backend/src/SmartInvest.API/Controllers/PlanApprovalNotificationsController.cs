@@ -11,6 +11,7 @@ namespace SmartInvest.API.Controllers;
 [Authorize(Roles = Roles.SuperAdmin)]
 public class PlanApprovalNotificationsController : ControllerBase
 {
+    // Limit the file size to 10 MB
     private readonly IPlanApprovalNotificationService _service;
 
     public PlanApprovalNotificationsController(IPlanApprovalNotificationService service)

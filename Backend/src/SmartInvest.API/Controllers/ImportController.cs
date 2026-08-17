@@ -11,6 +11,7 @@ namespace SmartInvest.API.Controllers;
 [Authorize(Roles = Roles.PlanningStaff)]
 public class ImportController : ControllerBase
 {
+    // Limit the file size to 10 MB
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
 
     private readonly IImportService _importService;
