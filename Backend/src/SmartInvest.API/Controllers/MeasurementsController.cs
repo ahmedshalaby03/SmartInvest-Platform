@@ -33,7 +33,7 @@ public class MeasurementsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = Roles.ManagementStaff)]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<MeasurementDto>> Create(CreateMeasurementDto dto, CancellationToken cancellationToken)
     {
         var result = await _measurementService.CreateAsync(dto, cancellationToken);
@@ -41,7 +41,7 @@ public class MeasurementsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.ManagementStaff)]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<MeasurementDto>> Update(int id, UpdateMeasurementDto dto, CancellationToken cancellationToken)
     {
         var result = await _measurementService.UpdateAsync(id, dto, cancellationToken);

@@ -336,7 +336,7 @@ public class LookupsController : ControllerBase
     }
 
     [HttpPost("units")]
-    [Authorize(Roles = Roles.ManagementStaff)]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<LookupDto>> CreateUnit(CreateNamedLookupDto dto, CancellationToken cancellationToken)
     {
         var result = await _lookupService.CreateUnitAsync(dto, cancellationToken);
@@ -344,7 +344,7 @@ public class LookupsController : ControllerBase
     }
 
     [HttpPut("units/{id:int}")]
-    [Authorize(Roles = Roles.ManagementStaff)]
+    [Authorize(Roles = Roles.PlanningStaff)]
     public async Task<ActionResult<LookupDto>> UpdateUnit(int id, UpdateNamedLookupDto dto, CancellationToken cancellationToken)
     {
         var result = await _lookupService.UpdateUnitAsync(id, dto, cancellationToken);
