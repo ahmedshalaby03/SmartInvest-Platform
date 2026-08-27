@@ -47,6 +47,18 @@ export class FinancialList implements OnInit {
     return PROCUREMENT_STAGE_NAMES[completedStages] ?? 'اكتمل الطرح';
   }
 
+  /**
+   * اسم المرحلة المعروض في عمود "تقدم الطرح" لكل صف — عرض فقط، لا يغيّر completedStages/totalStages:
+   * مشروع بلا مذكرة عرض لم يبدأ فعليًا "كراسة الشروط" (محظور عليه حتى يُرفَق له مذكرة معتمدة)،
+   * فيُعرض واقفًا عند "مذكرة عرض" بدلًا من الإيحاء بأنه بدأ الطرح فعلًا.
+   */
+  protected rowStageLabel(item: ProcurementSubProjectListItem): string {
+    if (item.completedStages === 0 && !item.hasPresentationMemo) {
+      return 'مذكرة عرض';
+    }
+    return this.stageLabel(item.completedStages);
+  }
+
   /** فلتر نوع التعاقد — مأخوذ من مذكرة العرض الفعّالة */
   protected readonly methodFilter = signal<Set<number>>(new Set());
 

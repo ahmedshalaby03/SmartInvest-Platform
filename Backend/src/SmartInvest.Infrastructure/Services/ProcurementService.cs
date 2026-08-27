@@ -58,11 +58,14 @@ public class ProcurementService : IProcurementService
                     (_context.TechnicalEvaluations.Any(d => d.SubProjectId == s.SubProjectId && d.IsCompleted) ? 1 : 0) +
                     (_context.FinancialEvaluations.Any(d => d.SubProjectId == s.SubProjectId && d.IsCompleted) ? 1 : 0) +
                     (_context.ContractAwards.Any(d => d.SubProjectId == s.SubProjectId && d.IsCompleted) ? 1 : 0),
+                // فحص أوّلي عام (أي مذكرة في أي سنة) — يُستخدم فقط لتحديد أي المشروعات يستحق استعلام
+                // AttachActiveMemosAsync التفصيلي؛ القيمة النهائية المعروضة للواجهة تُستبدَل هناك بواحدة
+                // مقيَّدة بالسنة المالية المطلوبة (financialYearId) — هي مصدر تفعيل زر "مراحل الطرح".
                 HasPresentationMemo = _context.PresentationMemoSubProjects.Any(m => m.SubProjectId == s.SubProjectId),
             })
             .ToListAsync(cancellationToken);
 
-        await AttachActiveMemosAsync(items, excludeMemoId, cancellationToken);
+        await AttachActiveMemosAsync(items, financialYearId, excludeMemoId, cancellationToken);
         return items;
     }
 
@@ -71,10 +74,15 @@ public class ProcurementService : IProcurementService
     /// ثم دمج في الذاكرة. ضم جدول الروابط داخل الاستعلام الرئيسي يُضاعف الصفوف (cartesian join) —
     /// وهو ما جرى تفاديه سابقًا.
     /// </summary>
+    /// <param name="financialYearId">السنة المالية المطلوبة (فلتر شاشة الإدارة المالية) — الفعّالة (Active*)
+    /// وHasPresentationMemo النهائية تُقيَّدان بها: مذكرة من سنة أخرى لا تُفعِّل زر "مراحل الطرح" لهذه السنة.
+    /// مذكرات قديمة بلا سنة مسجَّلة (FinancialYearId == null) تُعامَل كمطابقة لأي سنة — تفاديًا لتعطيل
+    /// مشروعات حقيقية قديمة بأثر رجعي بسبب نقص بيانات تاريخي لا خطأ فيها.</param>
     /// <param name="excludeMemoId">مذكرة تُستبعد من فحص التعارض فقط (المذكرة قيد التعديل نفسها) —
-    /// "الفعّالة" (Active*) تبقى تحسب من كل المذكرات بلا استبعاد، فهي معلومة عرض عامة لا فحص تعارض.</param>
+    /// فحص التعارض (Completed/InProgress) يبقى بصرف النظر عن السنة المالية عمدًا، فهو تنبيه عام لا يخص شاشة بعينها.</param>
     private async Task AttachActiveMemosAsync(
         List<ProcurementSubProjectListItemDto> items,
+        int? financialYearId,
         int? excludeMemoId,
         CancellationToken cancellationToken)
     {
@@ -95,12 +103,18 @@ public class ProcurementService : IProcurementService
                 x.PresentationMemo.ContractingMethod,
                 x.PresentationMemo.IsCompleted,
                 x.PresentationMemo.CurrentVersionNumber,
+                x.PresentationMemo.FinancialYearId,
             })
             .ToListAsync(cancellationToken);
 
-        // الفعّالة = الأحدث إنشاءً بلا استبعاد، وعند التساوي الأعلى Id — ترتيب حتمي لا يتذبذب بين الطلبات.
-        // معلومة عرض عامة (تظهر في شاشة الإدارة المالية) وليست فحص تعارض، فلا تستبعد المذكرة قيد التعديل.
-        var activeBySubProject = links
+        // الفعّالة = الأحدث إنشاءً ضمن السنة المالية المطلوبة (أو أي سنة لو لم تُحدَّد سنة)، وعند التساوي
+        // الأعلى Id — ترتيب حتمي لا يتذبذب بين الطلبات. هذه هي المعلومة المعروضة في شاشة الإدارة المالية
+        // ومصدر تفعيل زر "مراحل الطرح"، فيجب أن تُقيَّد بالسنة حتى لا تُفعِّله مذكرة من سنة سابقة.
+        var activeCandidates = financialYearId == null
+            ? links
+            : links.Where(x => x.FinancialYearId == financialYearId || x.FinancialYearId == null).ToList();
+
+        var activeBySubProject = activeCandidates
             .GroupBy(x => x.SubProjectId)
             .ToDictionary(
                 g => g.Key,
@@ -142,9 +156,12 @@ public class ProcurementService : IProcurementService
 
             if (!activeBySubProject.TryGetValue(item.SubProjectId, out var active))
             {
+                // مذكرة (مذكرات) المشروع كلها من سنوات مالية أخرى — لا تُفعِّل زر "مراحل الطرح" لهذه السنة.
+                item.HasPresentationMemo = false;
                 continue;
             }
 
+            item.HasPresentationMemo = true;
             item.ActiveMemoId = active.MemoId;
             item.ActiveMemoTitle = active.Title;
             item.ContractingMethod = (int?)active.ContractingMethod;
@@ -778,13 +795,18 @@ public class ProcurementService : IProcurementService
     }
 
     /// <summary>
-    /// لا تبدأ أي مرحلة طرح لمشروع قبل اكتمال مذكرة العرض المرتبطة به — يجب أن تكون معتمَدة
-    /// بقرار لجنة الشؤون القانونية، لا يكفي إرفاقها فقط.
+    /// لا تبدأ أي مرحلة طرح لمشروع قبل اكتمال مذكرة العرض المرتبطة به لهذا العام — يجب أن تكون معتمَدة
+    /// بقرار لجنة الشؤون القانونية، لا يكفي إرفاقها فقط. مذكرة مكتملة من سنة مالية سابقة لا تكفي لبدء
+    /// عمل جديد في السنة الحالية — هذا هو الحارس الفعلي خلف زر "مراحل الطرح" (وليس تعطيله في الواجهة
+    /// وحده)، فيُطابق نفس شرط تفعيله بالضبط.
     /// </summary>
     private async Task EnsureHasPresentationMemoAsync(int subProjectId, CancellationToken cancellationToken)
     {
+        var currentYearId = await ResolveCurrentFinancialYearIdAsync(cancellationToken);
+
         var isActiveMemoCompleted = await _context.PresentationMemoSubProjects.AsNoTracking()
-            .Where(x => x.SubProjectId == subProjectId)
+            .Where(x => x.SubProjectId == subProjectId
+                && (x.PresentationMemo.FinancialYearId == currentYearId || x.PresentationMemo.FinancialYearId == null))
             .OrderByDescending(x => x.PresentationMemo.CreatedAt)
             .ThenByDescending(x => x.PresentationMemo.Id)
             .Select(x => (bool?)x.PresentationMemo.IsCompleted)
@@ -792,8 +814,34 @@ public class ProcurementService : IProcurementService
 
         if (isActiveMemoCompleted != true)
         {
-            throw new BusinessRuleException("لا يمكن بدء مراحل الطرح قبل اكتمال مذكرة العرض المرتبطة بالمشروع");
+            throw new BusinessRuleException("لا يمكن بدء مراحل الطرح قبل اكتمال مذكرة العرض المرتبطة بالمشروع للسنة المالية الحالية");
         }
+    }
+
+    /// <summary>
+    /// السنة المالية "الحالية" = التي يقع تاريخ اليوم بين بدايتها ونهايتها؛ محسوبة من التاريخ لا من اختيار
+    /// العميل، حتى لا يُخدَع الحارس بمعامل سنة مُرسَل من طلب مباشر. عند غياب سنة تطابق اليوم (فجوة بيانات)
+    /// يُستخدَم أحدث سنة بدأت فعلًا كأقرب تقدير بدل ترك الحارس بلا مرجعية.
+    /// </summary>
+    private async Task<int?> ResolveCurrentFinancialYearIdAsync(CancellationToken cancellationToken)
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var currentByRange = await _context.FinancialYears.AsNoTracking()
+            .Where(y => y.StartDate.Date <= today && y.EndDate.Date >= today)
+            .OrderByDescending(y => y.StartDate)
+            .Select(y => (int?)y.FinancialYearId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (currentByRange != null)
+        {
+            return currentByRange;
+        }
+
+        return await _context.FinancialYears.AsNoTracking()
+            .OrderByDescending(y => y.StartDate)
+            .Select(y => (int?)y.FinancialYearId)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private async Task<bool> IsPreviousStageCompletedAsync(ProcurementStage stage, int subProjectId, CancellationToken cancellationToken)

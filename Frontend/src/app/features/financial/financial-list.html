@@ -169,12 +169,23 @@
                   <div class="prog">
                     <div class="bar" [style.width.%]="progress(item)"></div>
                   </div>
-                  <span class="tnum prog-txt">{{ stageLabel(item.completedStages) }}</span>
+                  <span class="tnum prog-txt">{{ rowStageLabel(item) }}</span>
                 </td>
                 <td data-label="الإجراء">
-                  <a class="si-btn primary sm" [routerLink]="['/app/financial', item.subProjectId]">
-                    مراحل الطرح
-                  </a>
+                  @if (item.hasPresentationMemo) {
+                    <a class="si-btn primary sm" [routerLink]="['/app/financial', item.subProjectId]">
+                      مراحل الطرح
+                    </a>
+                  } @else {
+                    <button
+                      type="button"
+                      class="si-btn primary sm"
+                      disabled
+                      title="يجب إرفاق مذكرة عرض لهذا المشروع في السنة المالية الحالية أولاً"
+                    >
+                      مراحل الطرح
+                    </button>
+                  }
                 </td>
               </tr>
             } @empty {

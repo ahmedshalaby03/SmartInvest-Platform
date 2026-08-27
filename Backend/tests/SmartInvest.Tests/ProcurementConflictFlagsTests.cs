@@ -72,6 +72,60 @@ public sealed class ProcurementConflictFlagsTests
         Assert.False(excludedItem.HasInProgressMemo);
     }
 
+    /// <summary>يغطي زر "مراحل الطرح" في شاشة الإدارة المالية: مذكرة من سنة مالية غير المعروضة حاليًا
+    /// لا تُفعِّله — HasPresentationMemo يجب أن يعكس مذكرة السنة المطلوبة فقط، لا "أي مذكرة على الإطلاق".</summary>
+    [Fact]
+    public async Task HasPresentationMemo_reflects_only_the_requested_financial_year()
+    {
+        await using var context = CreateContext();
+        var project = await SeedApprovedProjectAsync(context, "مشروع بمذكرة سنة سابقة فقط");
+        var previousYear = new FinancialYear { Name = "سنة سابقة", StartDate = DateTime.UtcNow.AddYears(-2), EndDate = DateTime.UtcNow.AddYears(-1) };
+        var currentYear = new FinancialYear { Name = "سنة حالية", StartDate = DateTime.UtcNow.AddYears(-1), EndDate = DateTime.UtcNow.AddYears(1) };
+        context.FinancialYears.AddRange(previousYear, currentYear);
+        await context.SaveChangesAsync();
+        // المشروع نفسه (لا المذكرة فقط) يجب أن يكون مرتبطًا بالسنتين حتى تُدرجه GetSubProjectsAsync
+        // عند تمرير financialYearId — هذا فلتر منفصل مسبق (SubProject.FinancialYears) قبل فحص المذكرة أصلًا.
+        context.Set<SubProjectFinancialYear>().AddRange(
+            new SubProjectFinancialYear { SubProjectId = project.SubProjectId, FinancialYearId = previousYear.FinancialYearId },
+            new SubProjectFinancialYear { SubProjectId = project.SubProjectId, FinancialYearId = currentYear.FinancialYearId });
+        await context.SaveChangesAsync();
+
+        await LinkMemoAsync(context, project, title: "مذكرة السنة السابقة", isCompleted: true, currentVersionNumber: 1, financialYearId: previousYear.FinancialYearId);
+
+        var itemsForPreviousYear = await CreateService(context).GetSubProjectsAsync(financialYearId: previousYear.FinancialYearId);
+        var previousYearItem = itemsForPreviousYear.Single(i => i.SubProjectId == project.SubProjectId);
+        Assert.True(previousYearItem.HasPresentationMemo);
+        Assert.NotNull(previousYearItem.ActiveMemoId);
+
+        var itemsForCurrentYear = await CreateService(context).GetSubProjectsAsync(financialYearId: currentYear.FinancialYearId);
+        var currentYearItem = itemsForCurrentYear.Single(i => i.SubProjectId == project.SubProjectId);
+        Assert.False(currentYearItem.HasPresentationMemo);
+        Assert.Null(currentYearItem.ActiveMemoId);
+        Assert.Null(currentYearItem.ActiveMemoTitle);
+    }
+
+    /// <summary>سجلات قديمة بلا سنة مالية مسجَّلة على المذكرة (FinancialYearId == null) تبقى تُفعِّل الزر
+    /// أيًّا كانت السنة المعروضة — تفاديًا لتعطيل مشروعات حقيقية بأثر رجعي بسبب نقص بيانات تاريخي.</summary>
+    [Fact]
+    public async Task HasPresentationMemo_treats_legacy_memo_without_a_financial_year_as_always_matching()
+    {
+        await using var context = CreateContext();
+        var project = await SeedApprovedProjectAsync(context, "مشروع بمذكرة قديمة بلا سنة");
+        var year = new FinancialYear { Name = "سنة معروضة", StartDate = DateTime.UtcNow.AddYears(-1), EndDate = DateTime.UtcNow.AddYears(1) };
+        context.FinancialYears.Add(year);
+        await context.SaveChangesAsync();
+        context.Set<SubProjectFinancialYear>().Add(
+            new SubProjectFinancialYear { SubProjectId = project.SubProjectId, FinancialYearId = year.FinancialYearId });
+        await context.SaveChangesAsync();
+
+        await LinkMemoAsync(context, project, title: "مذكرة قديمة", isCompleted: true, currentVersionNumber: 1, financialYearId: null);
+
+        var items = await CreateService(context).GetSubProjectsAsync(financialYearId: year.FinancialYearId);
+        var item = items.Single(i => i.SubProjectId == project.SubProjectId);
+        Assert.True(item.HasPresentationMemo);
+        Assert.NotNull(item.ActiveMemoId);
+    }
+
     private static ProcurementService CreateService(AppDbContext context) => new(
         context,
         Mock.Of<IExecutionStageService>(),
@@ -100,7 +154,8 @@ public sealed class ProcurementConflictFlagsTests
         SubProject project,
         string title,
         bool isCompleted,
-        int currentVersionNumber)
+        int currentVersionNumber,
+        int? financialYearId = null)
     {
         var memo = new PresentationMemo
         {
@@ -108,6 +163,7 @@ public sealed class ProcurementConflictFlagsTests
             ContractingMethod = ContractingMethod.PublicTender,
             IsCompleted = isCompleted,
             CurrentVersionNumber = currentVersionNumber,
+            FinancialYearId = financialYearId,
         };
         context.Set<PresentationMemo>().Add(memo);
         await context.SaveChangesAsync();

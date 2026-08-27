@@ -72,6 +72,48 @@ public sealed class ContractAwardReworkTests
         Assert.Equal(1, await context.TenderDocuments.CountAsync());
     }
 
+    /// <summary>مذكرة مكتملة لكن من سنة مالية سابقة (لا الحالية) لا تكفي لبدء مرحلة طرح جديدة —
+    /// هذا هو الحارس الفعلي خلف تعطيل زر "مراحل الطرح" في الواجهة لمشروع بمذكرة قديمة فقط.</summary>
+    [Fact]
+    public async Task Cannot_start_procurement_stage_when_only_a_previous_year_memo_is_completed()
+    {
+        await using var context = CreateContext();
+        var project = await SeedProjectAsync(context, bankFunding: 100_000m, selfFunding: 0m);
+        var previousYear = new FinancialYear
+        {
+            Name = "سنة سابقة",
+            StartDate = DateTime.UtcNow.AddYears(-3),
+            EndDate = DateTime.UtcNow.AddYears(-2),
+        };
+        context.FinancialYears.Add(previousYear);
+        await context.SaveChangesAsync();
+
+        var memo = new PresentationMemo
+        {
+            Title = "مذكرة سنة سابقة",
+            ContractingMethod = ContractingMethod.PublicTender,
+            IsCompleted = true,
+            FinancialYearId = previousYear.FinancialYearId,
+        };
+        context.Set<PresentationMemo>().Add(memo);
+        await context.SaveChangesAsync();
+        context.Set<PresentationMemoSubProject>().Add(new PresentationMemoSubProject
+        {
+            PresentationMemoId = memo.Id,
+            SubProjectId = project.SubProjectId,
+        });
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() =>
+            service.UploadVersionAsync(project.SubProjectId, ProcurementStage.TenderDocument, new UploadProcurementVersionDto
+            {
+                Files = new Dictionary<string, FileUploadDto> { ["file"] = File("f.pdf") },
+            }));
+        Assert.Contains("سنة المالية الحالية", ex.Message);
+    }
+
     [Fact]
     public async Task Contract_value_above_planned_plus_overrun_blocks_completion()
     {
