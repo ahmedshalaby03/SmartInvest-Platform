@@ -52,6 +52,8 @@ export class AuthService {
     return role === Roles.FinancialEmployee || role === Roles.FinancialManager || role === Roles.SuperAdmin;
   });
   readonly canManageFinancial = computed(() => this.isFinancialManager() || this.isSuperAdmin());
+  // تسجيل إتاحة بنكية جديدة متاح لمدير التخطيط أيضًا، بينما يظل تعديلها وحذفها للإدارة المالية.
+  readonly canAddBankAvailability = computed(() => this.canEditFinancial() || this.isPlanningManager());
   readonly canManageProcurementDuration = computed(
     () => this.isPlanningManager() || this.isSuperAdmin(),
   );

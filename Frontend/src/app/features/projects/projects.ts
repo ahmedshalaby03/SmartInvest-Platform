@@ -114,6 +114,7 @@ export class Projects {
   protected readonly availabilityError = signal<string | null>(null);
   protected readonly selectedYear = computed(() => this.financialYears().find((y) => y.id === this.selectedYearId()) ?? null);
   protected readonly canDeleteAvailability = this.auth.canManageFinancial;
+  protected readonly canAddAvailability = this.auth.canAddBankAvailability;
 
   protected readonly showAvailabilityModal = signal(false);
   protected readonly showAddAvailabilityForm = signal(false);

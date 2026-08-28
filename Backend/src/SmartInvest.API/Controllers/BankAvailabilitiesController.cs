@@ -8,7 +8,7 @@ using SmartInvest.Domain.Common;
 
 namespace SmartInvest.API.Controllers;
 
-/// <summary>سجل الإتاحات البنكية لكل سنة مالية — تعديله محصور على الإدارة المالية والسوبر أدمن.</summary>
+/// <summary>سجل الإتاحات البنكية لكل سنة مالية — الإضافة متاحة كذلك لمدير التخطيط، أما التعديل والحذف فمحصوران على الإدارة المالية والسوبر أدمن.</summary>
 [ApiController]
 [Authorize]
 [Route("api/financial-years/{financialYearId:int}/bank-availabilities")]
@@ -30,7 +30,7 @@ public class BankAvailabilitiesController : ControllerBase
 
     /// <summary>multipart/form-data: amount, receivedDate, notes (اختياري) + مستند إثبات واحد أو أكثر.</summary>
     [HttpPost]
-    [Authorize(Roles = Roles.FinancialOperationsStaff)]
+    [Authorize(Roles = Roles.BankAvailabilityCreators)]
     public async Task<ActionResult<BankAvailabilityDto>> Create(
         int financialYearId,
         [FromForm] decimal amount,

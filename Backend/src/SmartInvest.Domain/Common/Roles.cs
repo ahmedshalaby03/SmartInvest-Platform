@@ -27,6 +27,9 @@ public static class Roles
     /// <summary>الموظفون المسموح لهم بتنفيذ أعمال الإدارة المالية اليومية.</summary>
     public const string FinancialOperationsStaff = "FinancialEmployee,FinancialManager,SuperAdmin";
 
+    /// <summary>المسموح لهم بتسجيل إتاحة بنكية جديدة — الإدارة المالية ومدير التخطيط والسوبر أدمن. التعديل والحذف يظلان على الإدارة المالية وحدها.</summary>
+    public const string BankAvailabilityCreators = "FinancialEmployee,FinancialManager,PlanningManager,SuperAdmin";
+
     /// <summary>المديرون المسموح لهم بتنفيذ العمليات المالية الحساسة.</summary>
     public const string FinancialManagers = "FinancialManager,SuperAdmin";
 

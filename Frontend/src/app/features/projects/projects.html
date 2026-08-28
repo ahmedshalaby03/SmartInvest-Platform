@@ -280,7 +280,7 @@
             <div class="avail-stat"><span class="lab">المتبقي الممكن إتاحته</span><b class="tnum">{{ thousandsLabel(availabilityData()?.remainingAvailable ?? 0) }}</b></div>
           </div>
 
-          @if (canEditFinancial() && !showAddAvailabilityForm()) {
+          @if (canAddAvailability() && !showAddAvailabilityForm()) {
             <button type="button" class="si-btn" (click)="openAddAvailabilityForm()">
               <svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
               إضافة إتاحة
