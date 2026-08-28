@@ -229,6 +229,7 @@ public class SuggestedPlanImportService
             }
 
             MainProject? mainProject = null;
+            var mainProjectIsNew = false;
             var mainProjectCreatedHere = false;
             try
             {
@@ -251,6 +252,7 @@ public class SuggestedPlanImportService
                         IsApproved = false,
                     };
 
+                    mainProjectIsNew = true;
                     await _mainProjectRepository.AddAsync(mainProject, cancellationToken);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
                     mainProjectCreatedHere = true;
@@ -270,12 +272,13 @@ public class SuggestedPlanImportService
                     result.Failed.Add(new ImportRowFailureDto { Name = row.SubProjectName, Reason = ex.Message });
                 }
 
-                // SaveChangesAsync leaves a failed entity tracked as Added; if we don't detach it here,
-                // the next AddAsync+SaveChangesAsync call will try to persist it again and fail again,
-                // mislabeling the next group as failed for the same reason. Only remove it when THIS
-                // attempt created it - a reused existing MainProject is tracked as Unchanged and must
-                // not be deleted just because something later in this group's processing failed.
-                if (mainProject is not null && mainProjectCreatedHere)
+                // A failed SaveChangesAsync leaves the entity tracked as Added; if we don't detach it
+                // here, every later SaveChangesAsync (including the plan-level one at the end of this
+                // method) retries that same doomed INSERT, so one bad group poisons the whole commit.
+                // Detach only an entity THIS attempt instantiated and failed to persist: a reused
+                // existing MainProject is tracked as Unchanged, and one that was actually saved is
+                // real data - neither may be turned into a DELETE just because something else failed.
+                if (mainProject is not null && mainProjectIsNew && !mainProjectCreatedHere)
                 {
                     _mainProjectRepository.Remove(mainProject);
                 }
@@ -286,6 +289,7 @@ public class SuggestedPlanImportService
             foreach (var row in group.Rows)
             {
                 SubProject? subProject = null;
+                var subProjectIsNew = false;
                 var subProjectCreatedHere = false;
                 try
                 {
@@ -316,15 +320,13 @@ public class SuggestedPlanImportService
 
                     // Same duplicate guard as the main-project reuse above, one level down - a
                     // sub-project with this exact name already under this main project is reused
-                    // instead of duplicated ONLY when it already belongs to THIS financial year
-                    // (i.e. this is a re-upload/correction of the same year's plan, same as the
-                    // main-project reuse above is meant to dedup). A same-named sub-project that
-                    // belongs to a DIFFERENT financial year is a separate project instance for
-                    // that year, not this one - reusing its row here would silently carry its
-                    // procurement documents/workflow state (e.g. مذكرة عرض, IsApproved) into a
-                    // year that never actually had any of that, since those all key off
-                    // SubProjectId alone. Give it a brand-new row instead so this year starts
-                    // clean; the other year's row and data are left completely untouched.
+                    // instead of duplicated. Prefer the one already linked to THIS financial year
+                    // (a re-upload/correction of the same year's plan), but fall back to any
+                    // same-named sibling: (MainProjectId, SubProjectName) carries a unique index,
+                    // so a second row under the same main project is not something the database
+                    // will accept - importing the same plan into a NEW financial year has to reuse
+                    // the existing row and add a year link to it, which is what the block below
+                    // already does. The sub-project is then shared across both years' plans.
                     var candidatesByName = await _subProjectRepository.FindByNameWithinMainProjectAsync(row.SubProjectName.Trim(), mainProject.MainProjectId, cancellationToken);
                     subProject = null;
                     foreach (var candidate in candidatesByName)
@@ -336,6 +338,11 @@ public class SuggestedPlanImportService
                             subProject = candidate;
                             break;
                         }
+                    }
+
+                    if (subProject == null && candidatesByName.Count > 0)
+                    {
+                        subProject = candidatesByName[0];
                     }
 
                     if (subProject == null)
@@ -358,6 +365,7 @@ public class SuggestedPlanImportService
                             SelfFunding = row.SelfFunding,
                         };
 
+                        subProjectIsNew = true;
                         await _subProjectRepository.AddAsync(subProject, cancellationToken);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                         subProjectCreatedHere = true;
@@ -410,12 +418,13 @@ public class SuggestedPlanImportService
                 {
                     result.Failed.Add(new ImportRowFailureDto { Name = row.SubProjectName, Reason = ex.Message });
 
-                    // SaveChangesAsync leaves a failed entity tracked as Added; if we don't detach it here,
-                    // the next AddAsync+SaveChangesAsync call will try to persist it again and fail again,
-                    // mislabeling the next row as failed for the same reason. Only remove it when THIS
-                    // attempt created it - a reused existing sub-project is tracked as Unchanged and
-                    // must not be deleted just because a later step for this row failed.
-                    if (subProject is not null && subProjectCreatedHere)
+                    // A failed SaveChangesAsync leaves the entity tracked as Added; if we don't detach it
+                    // here, every later SaveChangesAsync (including the plan-level one at the end of this
+                    // method) retries that same doomed INSERT, so one bad row poisons the whole commit.
+                    // Detach only an entity THIS attempt instantiated and failed to persist: a reused
+                    // existing sub-project is tracked as Unchanged, and one that was actually saved is
+                    // real data - neither may be turned into a DELETE just because a later step failed.
+                    if (subProject is not null && subProjectIsNew && !subProjectCreatedHere)
                     {
                         _subProjectRepository.Remove(subProject);
                     }
@@ -423,36 +432,52 @@ public class SuggestedPlanImportService
             }
         }
 
-        var plan = _planRepo.GetByFinancialYearAndStatus(dto.FinancialYearId, PlanStatus.Suggested);
-        if (plan == null)
+        // Everything above already committed its own rows; an exception escaping this plan-level
+        // step would surface as a bare 500 ("حدث خطأ غير متوقع") and hide work that really happened,
+        // so report it as a failure entry instead - same as ApprovedPlanImportService does.
+        try
         {
-            plan = new Plan
+            var plan = _planRepo.GetByFinancialYearAndStatus(dto.FinancialYearId, PlanStatus.Suggested);
+            if (plan == null)
             {
-                PlanName = $"الخطة المقترحة – {financialYear.Name}",
-                PlanStatus = PlanStatus.Suggested,
-                StartDate = financialYear.StartDate,
-                EndDate = financialYear.EndDate,
-                FinancialYearId = dto.FinancialYearId,
-                SuggestionDate = DateTime.UtcNow,
-            };
-            await _planRepo.AddAsync(plan, cancellationToken);
+                plan = new Plan
+                {
+                    PlanName = $"الخطة المقترحة – {financialYear.Name}",
+                    PlanStatus = PlanStatus.Suggested,
+                    StartDate = financialYear.StartDate,
+                    EndDate = financialYear.EndDate,
+                    FinancialYearId = dto.FinancialYearId,
+                    SuggestionDate = DateTime.UtcNow,
+                };
+                await _planRepo.AddAsync(plan, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            // createdSubProjects now also holds reused (not just newly-created) sub-projects - a reused
+            // one may already sit on this exact plan from the import that first created it, so guard
+            // against a duplicate PlanProject row the same way ApprovedPlanImportService does. Two rows
+            // of the same file can also land on one reused sub-project, so de-duplicate within this
+            // batch too - (PlanId, SubProjectId) is a unique index.
+            var alreadyLinkedToPlan = (await _planProjectRepository.FindAsync(x => x.PlanId == plan.PlanId, cancellationToken))
+                .Select(x => x.SubProjectId).ToHashSet();
+            foreach (var subProjectId in createdSubProjects.Select(sp => sp.SubProjectId).Distinct().Where(id => !alreadyLinkedToPlan.Contains(id)))
+            {
+                await _planProjectRepository.AddAsync(new PlanProject { PlanId = plan.PlanId, SubProjectId = subProjectId }, cancellationToken);
+            }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
 
-        // createdSubProjects now also holds reused (not just newly-created) sub-projects - a reused
-        // one may already sit on this exact plan from the import that first created it, so guard
-        // against a duplicate PlanProject row the same way ApprovedPlanImportService does.
-        var alreadyLinkedToPlan = (await _planProjectRepository.FindAsync(x => x.PlanId == plan.PlanId, cancellationToken))
-            .Select(x => x.SubProjectId).ToHashSet();
-        foreach (var subProject in createdSubProjects.Where(sp => !alreadyLinkedToPlan.Contains(sp.SubProjectId)))
+            result.PlanId = plan.PlanId;
+            result.PlanName = plan.PlanName;
+            result.PlanStatus = plan.PlanStatus.ToString();
+        }
+        catch (Exception ex)
         {
-            await _planProjectRepository.AddAsync(new PlanProject { PlanId = plan.PlanId, SubProjectId = subProject.SubProjectId }, cancellationToken);
+            result.Failed.Add(new ImportRowFailureDto
+            {
+                Name = "-",
+                Reason = $"تم حفظ المشروعات الفرعية بنجاح، لكن تعذّر تحديث الخطة: {ex.Message}",
+            });
         }
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        result.PlanId = plan.PlanId;
-        result.PlanName = plan.PlanName;
-        result.PlanStatus = plan.PlanStatus.ToString();
 
         return result;
     }
