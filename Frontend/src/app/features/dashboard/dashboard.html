@@ -69,11 +69,11 @@
 
       <a class="kpi warn" [routerLink]="['/app/projects']" [queryParams]="projectsQueryParams('pending')" aria-label="عرض المشروعات قيد المراجعة">
         <div class="kpi-top">
-          <span class="lab">قيد المراجعة</span>
+          <span class="lab">مقترحة</span>
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg></span>
         </div>
         <b class="val" [title]="data.projectMetrics.proposedCount">{{ data.projectMetrics.proposedCount }}</b>
-        <span class="sub">بانتظار الاعتماد</span>
+        <span class="sub">لم تعتمد</span>
       </a>
 
       <a class="kpi bad" [routerLink]="['/app/projects']" [queryParams]="projectsQueryParams('stalled')" aria-label="عرض المشروعات المتعثرة">
